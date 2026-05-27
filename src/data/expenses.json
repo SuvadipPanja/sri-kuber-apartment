@@ -1,0 +1,26 @@
+[
+  {
+    "id": "EXP-001",
+    "date": "2026-05-17",
+    "expenseType": "Purchase Lock & Key for Main and Terrace Gate",
+    "billAmount": 530,
+    "builderContribution": 0,
+    "netExpense": 530,
+    "paidTo": "Suvadip Panja",
+    "month": "May",
+    "year": 2026,
+    "remarks": ""
+  },
+  {
+    "id": "EXP-002",
+    "date": "2026-05-17",
+    "expenseType": "Electricity Bill",
+    "billAmount": 330,
+    "builderContribution": 54,
+    "netExpense": 276,
+    "paidTo": "Electricity Office",
+    "month": "May",
+    "year": 2026,
+    "remarks": ""
+  }
+]

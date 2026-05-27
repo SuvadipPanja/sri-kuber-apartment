@@ -1,0 +1,57 @@
+[
+  {
+    "id": "PAY-001",
+    "flatNo": "102",
+    "ownerName": "Paromita Banerjee",
+    "month": "May",
+    "year": 2026,
+    "amountPaid": 500,
+    "paymentDate": "2026-05-17",
+    "paymentMode": "In Cash",
+    "remarks": ""
+  },
+  {
+    "id": "PAY-002",
+    "flatNo": "201",
+    "ownerName": "Amit Chakraborty",
+    "month": "May",
+    "year": 2026,
+    "amountPaid": 500,
+    "paymentDate": "2026-05-17",
+    "paymentMode": "In Cash",
+    "remarks": ""
+  },
+  {
+    "id": "PAY-003",
+    "flatNo": "301",
+    "ownerName": "Suvadip Panja",
+    "month": "May",
+    "year": 2026,
+    "amountPaid": 500,
+    "paymentDate": "2026-05-17",
+    "paymentMode": "In Cash",
+    "remarks": ""
+  },
+  {
+    "id": "PAY-004",
+    "flatNo": "401",
+    "ownerName": "Jayanto Deb",
+    "month": "May",
+    "year": 2026,
+    "amountPaid": 500,
+    "paymentDate": "2026-05-27",
+    "paymentMode": "In Cash",
+    "remarks": ""
+  },
+  {
+    "id": "PAY-005",
+    "flatNo": "402",
+    "ownerName": "Prashanta Das",
+    "month": "May",
+    "year": 2026,
+    "amountPaid": 500,
+    "paymentDate": "2026-05-17",
+    "paymentMode": "In Cash",
+    "remarks": ""
+  }
+]

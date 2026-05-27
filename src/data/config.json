@@ -1,0 +1,21 @@
+{
+  "societyName": "Sri Kuber Apartment",
+  "address": "Please update your address here",
+  "city": "Kolkata",
+  "state": "West Bengal",
+  "totalFlats": 10,
+  "monthlyCharge": 500,
+  "currentMonth": "May",
+  "currentYear": 2026,
+  "carryForwardBalances": {
+    "Jan-2026": 0,
+    "Feb-2026": 0,
+    "Mar-2026": 0,
+    "Apr-2026": 0,
+    "May-2026": 0
+  },
+  "announcement": "Welcome to Sri Kuber Apartment resident portal. Please pay maintenance dues on time.",
+  "contactEmail": "",
+  "contactPhone": "",
+  "societyPhoto": ""
+}

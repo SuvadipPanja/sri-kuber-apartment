@@ -1,0 +1,92 @@
+[
+  {
+    "flatNo": "101",
+    "ownerName": "Vacant",
+    "phone": "",
+    "email": "",
+    "monthlyCharge": 500,
+    "active": false,
+    "notes": ""
+  },
+  {
+    "flatNo": "102",
+    "ownerName": "Paromita Banerjee",
+    "phone": "",
+    "email": "",
+    "monthlyCharge": 500,
+    "active": true,
+    "notes": ""
+  },
+  {
+    "flatNo": "201",
+    "ownerName": "Amit Chakraborty",
+    "phone": "",
+    "email": "",
+    "monthlyCharge": 500,
+    "active": true,
+    "notes": ""
+  },
+  {
+    "flatNo": "202",
+    "ownerName": "Vacant",
+    "phone": "",
+    "email": "",
+    "monthlyCharge": 500,
+    "active": false,
+    "notes": ""
+  },
+  {
+    "flatNo": "301",
+    "ownerName": "Suvadip Panja",
+    "phone": "",
+    "email": "",
+    "monthlyCharge": 500,
+    "active": true,
+    "notes": "Secretary"
+  },
+  {
+    "flatNo": "302",
+    "ownerName": "S Sarkar",
+    "phone": "",
+    "email": "",
+    "monthlyCharge": 500,
+    "active": true,
+    "notes": ""
+  },
+  {
+    "flatNo": "401",
+    "ownerName": "Jayanto Deb",
+    "phone": "",
+    "email": "",
+    "monthlyCharge": 500,
+    "active": true,
+    "notes": ""
+  },
+  {
+    "flatNo": "402",
+    "ownerName": "Prashanta Das",
+    "phone": "",
+    "email": "",
+    "monthlyCharge": 500,
+    "active": true,
+    "notes": ""
+  },
+  {
+    "flatNo": "501",
+    "ownerName": "Vacant",
+    "phone": "",
+    "email": "",
+    "monthlyCharge": 500,
+    "active": false,
+    "notes": ""
+  },
+  {
+    "flatNo": "502",
+    "ownerName": "Vacant",
+    "phone": "",
+    "email": "",
+    "monthlyCharge": 500,
+    "active": false,
+    "notes": ""
+  }
+]
