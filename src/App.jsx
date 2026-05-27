@@ -15,9 +15,9 @@ import Expenses from './pages/Expenses';
 import OtherIncome from './pages/OtherIncome';
 import SocietyInfo from './pages/SocietyInfo';
 import FlatDirectory from './pages/FlatDirectory';
+import MyAccount from './pages/MyAccount';
 import PrintableStatement from './pages/PrintableStatement';
 import WhatsAppShare from './pages/WhatsAppShare';
-import ChangePassword from './pages/ChangePassword';
 
 // Admin Pages
 import AdminPanel from './pages/admin/AdminPanel';
@@ -60,11 +60,11 @@ function AppRoutes() {
         <Route path="other-income" element={<OtherIncome />} />
         <Route path="society-info" element={<SocietyInfo />} />
         <Route path="flat-directory" element={<FlatDirectory />} />
-        <Route path="printable-statement" element={<PrintableStatement />} />
-        <Route path="whatsapp-share" element={<WhatsAppShare />} />
-        <Route path="change-password" element={<ChangePassword />} />
+        <Route path="my-account" element={<MyAccount />} />
 
         {/* Admin Routes */}
+        <Route path="printable-statement" element={<AdminRoute><PrintableStatement /></AdminRoute>} />
+        <Route path="whatsapp-share" element={<AdminRoute><WhatsAppShare /></AdminRoute>} />
         <Route path="admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
         <Route path="admin/payments" element={<AdminRoute><ManagePayments /></AdminRoute>} />
         <Route path="admin/expenses" element={<AdminRoute><ManageExpenses /></AdminRoute>} />

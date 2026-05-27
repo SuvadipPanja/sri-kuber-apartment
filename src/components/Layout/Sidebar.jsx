@@ -12,9 +12,11 @@ const mainNav = [
 const infoNav = [
   { label: 'Society Info',        icon: '🏠', path: '/society-info' },
   { label: 'Flat Directory',      icon: '👥', path: '/flat-directory' },
+  { label: 'My Account',          icon: '👤', path: '/my-account' },
+];
+const adminReportsNav = [
   { label: 'Printable Statement', icon: '🖨️', path: '/printable-statement' },
   { label: 'WhatsApp Share',      icon: '📱', path: '/whatsapp-share' },
-  { label: 'Change Password',     icon: '🔑', path: '/change-password' },
 ];
 const adminNav = [
   { label: 'Admin Panel',         icon: '⚙️', path: '/admin',                  exact: true },
@@ -67,6 +69,9 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
             </div>
             <hr className="nav-admin-divider" />
             {adminNav.map(item => <NavItem key={item.path} item={item} />)}
+
+            <div className="nav-section-title">Reports & Sharing</div>
+            {adminReportsNav.map(item => <NavItem key={item.path} item={item} />)}
           </>
         )}
       </nav>
