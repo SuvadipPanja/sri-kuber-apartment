@@ -8,11 +8,8 @@ export default function SocietyInfo() {
   if (loading) return <div className="loading-screen"><div className="loading-logo">SK</div><div className="spinner lg"></div></div>;
 
   const photos = [
+    { src: '/society_real.jpg', caption: 'Sri Kuber Apartment (Google Maps View)' },
     { src: config?.society_photo_url || '/society.png', caption: 'Front Elevation' },
-    { src: '/society_gate.png', caption: 'Main Entrance & Ground Floor' },
-    { src: '/society_staircase.png', caption: 'Common Staircase' },
-    { src: '/society_rooftop.png', caption: 'Rooftop View' },
-    { src: '/society_evening.png', caption: 'Evening View' },
   ];
 
   return (
@@ -24,9 +21,9 @@ export default function SocietyInfo() {
         </div>
       </div>
 
-      <div className="photo-gallery mb-3">
-        {photos.slice(0, 3).map((photo, i) => (
-          <div key={i} className="gallery-item" onClick={() => setLightbox(photo.src)}>
+      <div className="grid-2 mb-3">
+        {photos.map((photo, i) => (
+          <div key={i} className="gallery-item" style={{ height: '300px', borderRadius: 'var(--r-xl)' }} onClick={() => setLightbox(photo.src)}>
             <img src={photo.src} alt={photo.caption} onError={e => { e.target.style.display = 'none'; }} />
             <div className="gallery-item-overlay">
               <span className="gallery-caption">{photo.caption}</span>
@@ -34,19 +31,6 @@ export default function SocietyInfo() {
           </div>
         ))}
       </div>
-      
-      {photos.length > 3 && (
-        <div className="grid-2 mb-3">
-           {photos.slice(3).map((photo, i) => (
-            <div key={i} className="gallery-item" style={{ height: '220px', borderRadius: 'var(--r-xl)' }} onClick={() => setLightbox(photo.src)}>
-              <img src={photo.src} alt={photo.caption} onError={e => { e.target.style.display = 'none'; }} />
-              <div className="gallery-item-overlay">
-                <span className="gallery-caption">{photo.caption}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
       {lightbox && (
         <div className="lightbox-overlay" onClick={() => setLightbox(null)}>
