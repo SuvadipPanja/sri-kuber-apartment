@@ -1,9 +1,19 @@
+import { useState } from 'react';
 import { useConfig } from '../hooks/useSupabase';
 
 export default function SocietyInfo() {
   const { config, loading } = useConfig();
+  const [lightbox, setLightbox] = useState(null);
 
-  if (loading) return <div className="flex-center" style={{ height: '60vh' }}><div className="spinner" style={{ width: 40, height: 40 }} /></div>;
+  if (loading) return <div className="loading-screen"><div className="loading-logo">SK</div><div className="spinner lg"></div></div>;
+
+  const photos = [
+    { src: config?.society_photo_url || '/society.png', caption: 'Front Elevation' },
+    { src: '/society_gate.png', caption: 'Main Entrance & Ground Floor' },
+    { src: '/society_staircase.png', caption: 'Common Staircase' },
+    { src: '/society_rooftop.png', caption: 'Rooftop View' },
+    { src: '/society_evening.png', caption: 'Evening View' },
+  ];
 
   return (
     <div>
@@ -14,43 +24,44 @@ export default function SocietyInfo() {
         </div>
       </div>
 
-      {/* Society Photo */}
-      <div className="card" style={{ marginBottom: '1.5rem', padding: 0, overflow: 'hidden' }}>
-        <div style={{ position: 'relative' }}>
-          <img
-            src={config?.society_photo_url || '/society.png'}
-            alt="Sri Kuber Apartment Building"
-            style={{
-              width: '100%',
-              height: '340px',
-              objectFit: 'cover',
-              display: 'block',
-            }}
-            onError={e => { e.target.src = '/society.png'; }}
-          />
-          <div style={{
-            position: 'absolute', bottom: 0, left: 0, right: 0,
-            padding: '2rem 2rem 1.5rem',
-            background: 'linear-gradient(transparent, rgba(0,0,0,0.85))',
-          }}>
-            <h2 style={{ color: 'white', fontSize: '1.8rem', marginBottom: '0.25rem' }}>
-              {config?.society_name || 'Sri Kuber Apartment'}
-            </h2>
-            <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.9rem' }}>
-              📍 {config?.address}, {config?.city}, {config?.state}
-            </p>
+      <div className="photo-gallery mb-3">
+        {photos.slice(0, 3).map((photo, i) => (
+          <div key={i} className="gallery-item" onClick={() => setLightbox(photo.src)}>
+            <img src={photo.src} alt={photo.caption} onError={e => { e.target.style.display = 'none'; }} />
+            <div className="gallery-item-overlay">
+              <span className="gallery-caption">{photo.caption}</span>
+            </div>
           </div>
-        </div>
+        ))}
       </div>
+      
+      {photos.length > 3 && (
+        <div className="grid-2 mb-3">
+           {photos.slice(3).map((photo, i) => (
+            <div key={i} className="gallery-item" style={{ height: '220px', borderRadius: 'var(--r-xl)' }} onClick={() => setLightbox(photo.src)}>
+              <img src={photo.src} alt={photo.caption} onError={e => { e.target.style.display = 'none'; }} />
+              <div className="gallery-item-overlay">
+                <span className="gallery-caption">{photo.caption}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-      {/* Details */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+      {lightbox && (
+        <div className="lightbox-overlay" onClick={() => setLightbox(null)}>
+          <button className="lightbox-close" onClick={() => setLightbox(null)}>✕</button>
+          <img src={lightbox} className="lightbox-img" alt="Enlarged view" onClick={e => e.stopPropagation()} />
+        </div>
+      )}
+
+      <div className="grid-2">
         <div className="card">
-          <h3 style={{ fontSize: '1rem', marginBottom: '1rem' }}>📋 Society Details</h3>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <h3 className="text-base mb-2">📋 Society Details</h3>
+          <table className="w-full" style={{ borderCollapse: 'collapse' }}>
             <tbody>
               {[
-                ['🏠 Society Name', config?.society_name],
+                ['🏠 Name', config?.society_name],
                 ['📍 Address', config?.address],
                 ['🏙️ City', `${config?.city}, ${config?.state}`],
                 ['🏗️ Total Flats', config?.total_flats],
@@ -58,8 +69,8 @@ export default function SocietyInfo() {
                 ['📅 Current Month', `${config?.current_month} ${config?.current_year}`],
               ].map(([label, val]) => (
                 <tr key={label} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                  <td style={{ padding: '0.7rem 0', color: 'var(--text-muted)', fontSize: '0.85rem', width: '45%' }}>{label}</td>
-                  <td style={{ padding: '0.7rem 0', fontWeight: 500 }}>{val || '—'}</td>
+                  <td className="text-muted-c py-2 text-sm w-1/2">{label}</td>
+                  <td className="py-2 fw-medium">{val || '—'}</td>
                 </tr>
               ))}
             </tbody>
@@ -67,30 +78,23 @@ export default function SocietyInfo() {
         </div>
 
         <div className="card">
-          <h3 style={{ fontSize: '1rem', marginBottom: '1rem' }}>📢 Announcement</h3>
-          <div style={{
-            background: 'rgba(108, 99, 255, 0.08)',
-            border: '1px solid rgba(108, 99, 255, 0.2)',
-            borderRadius: 'var(--radius-md)',
-            padding: '1.25rem',
-            color: 'var(--text-primary)',
-            lineHeight: 1.7,
-          }}>
+          <h3 className="text-base mb-2">📢 Announcement</h3>
+          <div className="alert alert-info" style={{ marginBottom: 0 }}>
             {config?.announcement || 'No announcements at this time.'}
           </div>
 
           {(config?.contact_phone || config?.contact_email) && (
-            <div style={{ marginTop: '1.25rem' }}>
-              <div className="section-title" style={{ fontSize: '0.75rem' }}>Contact</div>
+            <div className="mt-3 border-top">
+              <div className="text-xs fw-bold text-muted-c uppercase mb-1 tracking-wider">Contact Details</div>
               {config.contact_phone && (
-                <p style={{ marginBottom: '0.5rem' }}>
-                  📞 <a href={`tel:${config.contact_phone}`}>{config.contact_phone}</a>
-                </p>
+                <div className="mb-1 flex items-center gap-1">
+                  📞 <a href={`tel:${config.contact_phone}`} className="text-accent-c fw-medium">{config.contact_phone}</a>
+                </div>
               )}
               {config.contact_email && (
-                <p>
-                  📧 <a href={`mailto:${config.contact_email}`}>{config.contact_email}</a>
-                </p>
+                <div className="flex items-center gap-1">
+                  📧 <a href={`mailto:${config.contact_email}`} className="text-accent-c fw-medium">{config.contact_email}</a>
+                </div>
               )}
             </div>
           )}

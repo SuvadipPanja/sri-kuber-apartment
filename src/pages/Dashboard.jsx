@@ -1,26 +1,15 @@
 import { useState } from 'react';
-import {
-  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip,
-  ResponsiveContainer, Legend
-} from 'recharts';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
 import { formatCurrency, MONTHS } from '../utils/formatters';
-import {
-  totalCollection, totalExpenses, totalOtherIncome,
-  calculateNetBalance, getFlatStats, buildPendingDues
-} from '../utils/calculations';
+import { totalCollection, totalExpenses, totalOtherIncome, calculateNetBalance, getFlatStats, buildPendingDues } from '../utils/calculations';
+import { Link } from 'react-router-dom';
 
-const CHART_COLORS = ['#4caf50', '#ff5252', '#5a5a80', '#f4b942', '#00d4aa'];
+const CHART_COLORS = ['#2ed573', '#ff4757', '#5a48e0', '#ffc107', '#00e5b0'];
 
-function mapPayment(p) {
-  return { ...p, flatNo: p.flat_no, ownerName: p.owner_name, amountPaid: p.amount_paid, paymentDate: p.payment_date, paymentMode: p.payment_mode };
-}
-function mapExpense(e) {
-  return { ...e, expenseType: e.expense_type, billAmount: e.bill_amount, builderContribution: e.builder_contribution, netExpense: e.net_expense, paidTo: e.paid_to };
-}
-function mapOwner(o) {
-  return { ...o, flatNo: o.flat_no, ownerName: o.owner_name, monthlyCharge: o.monthly_charge };
-}
+function mapPayment(p) { return { ...p, flatNo: p.flat_no, ownerName: p.owner_name, amountPaid: p.amount_paid, paymentDate: p.payment_date, paymentMode: p.payment_mode }; }
+function mapExpense(e) { return { ...e, expenseType: e.expense_type, billAmount: e.bill_amount, builderContribution: e.builder_contribution, netExpense: e.net_expense, paidTo: e.paid_to }; }
+function mapOwner(o)   { return { ...o, flatNo: o.flat_no, ownerName: o.owner_name, monthlyCharge: o.monthly_charge }; }
 
 export default function Dashboard() {
   const { config, loading: configLoading } = useConfig();
@@ -59,21 +48,13 @@ export default function Dashboard() {
   ].filter(d => d.value > 0);
 
   const barData = [
-    { name: 'Collected', amount: collected, fill: '#4caf50' },
-    { name: 'Expenses',  amount: spent,     fill: '#ff5252' },
-    { name: 'Balance',   amount: Math.max(0, netBalance), fill: '#6c63ff' },
+    { name: 'Collected', amount: collected, fill: 'var(--success)' },
+    { name: 'Other Inc', amount: otherIncome, fill: 'var(--accent)' },
+    { name: 'Expenses',  amount: spent,     fill: 'var(--danger)' },
+    { name: 'Net Bal',   amount: Math.max(0, netBalance), fill: 'var(--primary-light)' },
   ];
 
-  const years = [2025, 2026, 2027];
-
-  if (isLoading) return (
-    <div className="flex-center" style={{ height: '60vh' }}>
-      <div style={{ textAlign: 'center' }}>
-        <div className="spinner" style={{ width: 40, height: 40, margin: '0 auto 1rem' }} />
-        <p>Loading dashboard...</p>
-      </div>
-    </div>
-  );
+  if (isLoading) return <div className="loading-screen"><div className="loading-logo">SK</div><div className="spinner lg"></div></div>;
 
   return (
     <div>
@@ -82,99 +63,85 @@ export default function Dashboard() {
           <h1>📊 Dashboard</h1>
           <p className="page-subtitle">Monthly summary for {month} {year}</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <select
-            className="form-select"
-            style={{ width: 'auto', padding: '0.5rem 2rem 0.5rem 0.75rem' }}
-            value={month}
-            onChange={e => setSelectedMonth(e.target.value)}
-            id="dashboard-month-select"
-          >
+        <div className="flex gap-1 items-center">
+          <select className="form-select" style={{ width: 'auto' }} value={month} onChange={e => setSelectedMonth(e.target.value)}>
             {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
-          <select
-            className="form-select"
-            style={{ width: 'auto', padding: '0.5rem 2rem 0.5rem 0.75rem' }}
-            value={year}
-            onChange={e => setSelectedYear(Number(e.target.value))}
-            id="dashboard-year-select"
-          >
-            {years.map(y => <option key={y} value={y}>{y}</option>)}
+          <select className="form-select" style={{ width: 'auto' }} value={year} onChange={e => setSelectedYear(Number(e.target.value))}>
+            {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
       </div>
 
       {config?.announcement && (
-        <div className="alert alert-info" style={{ marginBottom: '1.5rem' }}>
-          📢 {config.announcement}
+        <div className="alert alert-info shadow-primary">
+          <span className="alert-icon">📢</span>
+          <div>{config.announcement}</div>
         </div>
       )}
 
-      {/* Stat Cards */}
-      <div className="stat-grid">
-        <div className="stat-card green">
-          <div className="stat-icon">💰</div>
-          <div className="stat-info">
-            <div className="stat-label">Total Collected</div>
-            <div className="stat-value rupee">{formatCurrency(collected)}</div>
-            <div className="stat-change up">↑ {stats.paid} flats paid</div>
+      {/* KPI Stat Cards */}
+      <div className="kpi-grid">
+        <Link to="/monthly-collection" style={{ textDecoration: 'none' }}>
+          <div className="kpi-card kpi-green">
+            <div className="kpi-top">
+              <div className="kpi-label">Collection</div>
+              <div className="kpi-icon">💰</div>
+            </div>
+            <div className="kpi-value rupee">{formatCurrency(collected)}</div>
+            <div className="kpi-meta"><span className="kpi-trend up">↑ {stats.paid} paid</span></div>
           </div>
-        </div>
-        <div className="stat-card red">
-          <div className="stat-icon">📉</div>
-          <div className="stat-info">
-            <div className="stat-label">Total Expenses</div>
-            <div className="stat-value rupee">{formatCurrency(spent)}</div>
-            <div className="stat-change down">↓ {expenses.filter(e => e.month === month && e.year === year).length} entries</div>
+        </Link>
+        <Link to="/expenses" style={{ textDecoration: 'none' }}>
+          <div className="kpi-card kpi-red">
+            <div className="kpi-top">
+              <div className="kpi-label">Expenses</div>
+              <div className="kpi-icon">📉</div>
+            </div>
+            <div className="kpi-value rupee">{formatCurrency(spent)}</div>
+            <div className="kpi-meta"><span className="kpi-trend down">↓ {expenses.filter(e => e.month === month && e.year === year).length} entries</span></div>
           </div>
-        </div>
-        <div className="stat-card blue">
-          <div className="stat-icon">💳</div>
-          <div className="stat-info">
-            <div className="stat-label">Net Balance</div>
-            <div className="stat-value rupee">{formatCurrency(netBalance)}</div>
-            <div className="stat-change" style={{ color: 'var(--text-muted)' }}>Opening: {formatCurrency(openingBalance)}</div>
+        </Link>
+        <Link to="/other-income" style={{ textDecoration: 'none' }}>
+          <div className="kpi-card kpi-accent">
+            <div className="kpi-top">
+              <div className="kpi-label">Other Income</div>
+              <div className="kpi-icon">💵</div>
+            </div>
+            <div className="kpi-value rupee">{formatCurrency(otherIncome)}</div>
+            <div className="kpi-meta"><span className="kpi-trend up">Extra income</span></div>
           </div>
-        </div>
-        <div className="stat-card gold">
-          <div className="stat-icon">⏳</div>
-          <div className="stat-info">
-            <div className="stat-label">Pending Dues</div>
-            <div className="stat-value">{stats.pending}</div>
-            <div className="stat-change down">{stats.pending > 0 ? `${formatCurrency(stats.pending * 500)} due` : '✅ All clear'}</div>
+        </Link>
+        <div className="kpi-card kpi-blue">
+          <div className="kpi-top">
+            <div className="kpi-label">Net Balance</div>
+            <div className="kpi-icon">💳</div>
           </div>
-        </div>
-        <div className="stat-card accent">
-          <div className="stat-icon">🏠</div>
-          <div className="stat-info">
-            <div className="stat-label">Active Flats</div>
-            <div className="stat-value">{stats.active} / {stats.total}</div>
-            <div className="stat-change" style={{ color: 'var(--text-muted)' }}>{stats.inactive} inactive</div>
-          </div>
+          <div className="kpi-value rupee">{formatCurrency(netBalance)}</div>
+          <div className="kpi-meta"><span className="kpi-trend flat">Opening: {formatCurrency(openingBalance)}</span></div>
         </div>
       </div>
 
-      {/* Charts */}
       <div className="charts-grid">
         <div className="card">
-          <h3 style={{ marginBottom: '1.25rem', fontSize: '1rem' }}>💳 Collection Status</h3>
+          <h3 className="chart-title">💳 Collection Status</h3>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
-              <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={4} dataKey="value">
+              <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={85} paddingAngle={4} dataKey="value" stroke="var(--bg-card)" strokeWidth={2}>
                 {pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i]} />)}
               </Pie>
-              <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8 }} />
-              <Legend formatter={(v) => <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>{v}</span>} />
+              <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text-white)' }} itemStyle={{ color: 'var(--text-white)' }} />
+              <Legend formatter={(v) => <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600 }}>{v}</span>} />
             </PieChart>
           </ResponsiveContainer>
         </div>
         <div className="card">
-          <h3 style={{ marginBottom: '1.25rem', fontSize: '1rem' }}>📊 Financial Summary</h3>
+          <h3 className="chart-title">📊 Financial Summary</h3>
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={barData} barSize={40}>
-              <XAxis dataKey="name" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} axisLine={false} tickLine={false} />
+            <BarChart data={barData} barSize={32} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <XAxis dataKey="name" tick={{ fill: 'var(--text-secondary)', fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `₹${v}`} />
-              <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8 }} formatter={(v) => [formatCurrency(v), 'Amount']} />
+              <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8 }} formatter={(v) => [formatCurrency(v), 'Amount']} cursor={{ fill: 'rgba(255,255,255,0.02)' }} />
               <Bar dataKey="amount" radius={[6, 6, 0, 0]}>
                 {barData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
               </Bar>
@@ -183,9 +150,11 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Flat Status Table */}
       <div className="card">
-        <h3 style={{ marginBottom: '1.25rem', fontSize: '1rem' }}>📋 {month} {year} — Flat Status</h3>
+        <div className="flex-between mb-2">
+          <h3 className="text-base m-0">📋 {month} {year} — Collection Status</h3>
+          <Link to="/pending-dues" className="btn btn-outline btn-sm">View Pending ⏳</Link>
+        </div>
         <div className="table-wrapper">
           <table className="data-table">
             <thead>
@@ -205,9 +174,9 @@ export default function Dashboard() {
                       {d.paid ? '✅ Paid' : '❌ Pending'}
                     </span>
                   </td>
-                  <td className="rupee">{d.paid ? formatCurrency(d.amountPaid) : '—'}</td>
-                  <td>{d.paymentDate ? new Date(d.paymentDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '—'}</td>
-                  <td>{d.paymentMode || '—'}</td>
+                  <td className="rupee">{d.paid ? <span className="text-success-c">{formatCurrency(d.amountPaid)}</span> : '—'}</td>
+                  <td className="text-muted-c">{d.paymentDate ? new Date(d.paymentDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '—'}</td>
+                  <td>{d.paymentMode ? <span className="tag">{d.paymentMode}</span> : '—'}</td>
                 </tr>
               ))}
             </tbody>
