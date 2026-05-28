@@ -85,10 +85,12 @@ export default function PrintableStatement() {
         <div className="flex gap-1 items-center flex-wrap">
           <select className="form-select" style={{ width: 'auto', padding: '0.5rem 2rem 0.5rem 0.75rem' }}
             value={month} onChange={e => setSelectedMonth(e.target.value)}>
+            <option value="All">All Months</option>
             {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
           <select className="form-select" style={{ width: 'auto', padding: '0.5rem 2rem 0.5rem 0.75rem' }}
-            value={year} onChange={e => setSelectedYear(Number(e.target.value))}>
+            value={year} onChange={e => setSelectedYear(e.target.value === 'All' ? 'All' : Number(e.target.value))}>
+            <option value="All">All Years</option>
             {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
           </select>
           <button className="btn btn-primary" onClick={handlePrint}>

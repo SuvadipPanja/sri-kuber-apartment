@@ -21,6 +21,16 @@ export default function MyPayments() {
           <h1>💳 My Payments</h1>
           <p className="page-subtitle">Flat {user?.flatNo} — Payment History</p>
         </div>
+        <div className="flex gap-1 items-center">
+          <select className="form-select" style={{ width: 'auto' }} value={month} onChange={e => setSelectedMonth(e.target.value)}>
+            <option value="All">All Months</option>
+            {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+          <select className="form-select" style={{ width: 'auto' }} value={year} onChange={e => setSelectedYear(e.target.value === 'All' ? 'All' : Number(e.target.value))}>
+            <option value="All">All Years</option>
+            {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+        </div>
         <div className="stat-card blue" style={{ padding: '0.75rem 1.25rem', gap: '0.75rem' }}>
           <div className="stat-icon" style={{ width: 36, height: 36, fontSize: '1rem' }}>💰</div>
           <div>

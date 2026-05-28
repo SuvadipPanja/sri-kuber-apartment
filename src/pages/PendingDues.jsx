@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
 import { formatCurrency, MONTHS } from '../utils/formatters';
 import { buildPendingDues, getFlatStats } from '../utils/calculations';
+import Icon from '../components/Icon';
 
 function mapPayment(p) { return { ...p, flatNo: p.flat_no, ownerName: p.owner_name, amountPaid: p.amount_paid, paymentDate: p.payment_date, paymentMode: p.payment_mode }; }
 function mapOwner(o)   { return { ...o, flatNo: o.flat_no, ownerName: o.owner_name, monthlyCharge: o.monthly_charge }; }
@@ -29,17 +30,17 @@ export default function PendingDues() {
   return (
     <div>
       <div className="page-header">
-        <div>
-          <h1>⏳ Pending Dues</h1>
+        <div className="page-header-left">
+          <h1 className="page-title"><Icon name="clock" size={24} /> Pending Dues</h1>
           <p className="page-subtitle">Outstanding maintenance dues report</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <select className="form-select" style={{ width: 'auto', padding: '0.5rem 2rem 0.5rem 0.75rem' }}
-            value={month} onChange={e => setSelectedMonth(e.target.value)} id="dues-month-select">
+        <div className="flex gap-1 items-center">
+          <select className="form-select" style={{ width: 'auto' }} value={month} onChange={e => setSelectedMonth(e.target.value)}>
+            <option value="All">All Months</option>
             {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
-          <select className="form-select" style={{ width: 'auto', padding: '0.5rem 2rem 0.5rem 0.75rem' }}
-            value={year} onChange={e => setSelectedYear(Number(e.target.value))} id="dues-year-select">
+          <select className="form-select" style={{ width: 'auto' }} value={year} onChange={e => setSelectedYear(e.target.value === 'All' ? 'All' : Number(e.target.value))}>
+            <option value="All">All Years</option>
             {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
@@ -88,8 +89,8 @@ export default function PendingDues() {
                   <tr key={d.flatNo}>
                     <td><strong>Flat {d.flatNo}</strong></td>
                     <td>{d.ownerName}</td>
-                    <td className="rupee" style={{ color: 'var(--danger)' }}>{formatCurrency(d.monthlyCharge)}</td>
-                    <td><span className="badge badge-danger">❌ PENDING</span></td>
+                    <td className="rupee" style={{ color: 'var(--danger)' }}>{formatCurrency(month === 'All' ? d.monthlyCharge * 12 : d.monthlyCharge)}</td>
+                    <td><span className="badge badge-danger">PENDING</span></td>
                   </tr>
                 ))}
               </tbody>

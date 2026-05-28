@@ -55,7 +55,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
           <Icon name="building" size={22} color="white" />
         </div>
         <div className="sidebar-brand-text">
-          <div className="sidebar-brand-name">Sri Kuber</div>
+          <div className="sidebar-brand-name">Sri Kuber Apartment</div>
           <div className="sidebar-brand-sub">Society Portal</div>
         </div>
       </div>

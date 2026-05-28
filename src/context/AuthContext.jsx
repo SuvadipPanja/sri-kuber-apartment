@@ -17,17 +17,31 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem('ska_user');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        // Re-enforce superadmin on session restore
-        if (parsed.flatNo === SUPERADMIN_FLAT) parsed.role = 'superadmin';
-        setUser(parsed);
-      } catch {
-        sessionStorage.removeItem('ska_user');
+    const initAuth = async () => {
+      const stored = sessionStorage.getItem('ska_user');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed.flatNo === SUPERADMIN_FLAT) parsed.role = 'superadmin';
+          
+          // Fetch fresh photo_url so user doesn't need to relogin to see updates
+          const { data: owner } = await supabase
+            .from('owners')
+            .select('photo_url')
+            .eq('flat_no', parsed.flatNo)
+            .single();
+            
+          if (owner?.photo_url) parsed.photoUrl = owner.photo_url;
+          
+          setUser(parsed);
+          sessionStorage.setItem('ska_user', JSON.stringify(parsed));
+        } catch {
+          sessionStorage.removeItem('ska_user');
+        }
       }
-    }
+      setLoading(false);
+    };
+    initAuth();
     setLoading(false);
   }, []);
 

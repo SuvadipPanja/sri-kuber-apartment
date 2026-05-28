@@ -30,13 +30,13 @@ export default function Expenses() {
           <h1>📉 Expenses</h1>
           <p className="page-subtitle">Society expenditure records</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <select className="form-select" style={{ width: 'auto', padding: '0.5rem 2rem 0.5rem 0.75rem' }}
-            value={month} onChange={e => setSelectedMonth(e.target.value)} id="expenses-month-select">
+        <div className="flex gap-1 items-center">
+          <select className="form-select" style={{ width: 'auto' }} value={month} onChange={e => setSelectedMonth(e.target.value)}>
+            <option value="All">All Months</option>
             {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
-          <select className="form-select" style={{ width: 'auto', padding: '0.5rem 2rem 0.5rem 0.75rem' }}
-            value={year} onChange={e => setSelectedYear(Number(e.target.value))} id="expenses-year-select">
+          <select className="form-select" style={{ width: 'auto' }} value={year} onChange={e => setSelectedYear(e.target.value === 'All' ? 'All' : Number(e.target.value))}>
+            <option value="All">All Years</option>
             {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>

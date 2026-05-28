@@ -6,21 +6,30 @@
  * Get all payments for a specific month and year
  */
 export function getMonthPayments(payments, month, year) {
-  return payments.filter(p => p.month === month && p.year === Number(year));
+  return payments.filter(p => 
+    (month === 'All' || p.month === month) && 
+    (year === 'All' || p.year === Number(year))
+  );
 }
 
 /**
  * Get all expenses for a specific month and year
  */
 export function getMonthExpenses(expenses, month, year) {
-  return expenses.filter(e => e.month === month && e.year === Number(year));
+  return expenses.filter(e => 
+    (month === 'All' || e.month === month) && 
+    (year === 'All' || e.year === Number(year))
+  );
 }
 
 /**
  * Get all other income for a specific month and year
  */
 export function getMonthIncome(income, month, year) {
-  return income.filter(i => i.month === month && i.year === Number(year));
+  return income.filter(i => 
+    (month === 'All' || i.month === month) && 
+    (year === 'All' || i.year === Number(year))
+  );
 }
 
 /**
@@ -65,18 +74,27 @@ export function calculateNetBalance(payments, expenses, income, month, year, ope
 export function buildPendingDues(owners, payments, month, year) {
   const activeOwners = owners.filter(o => o.active);
   return activeOwners.map(owner => {
-    const payment = payments.find(
-      p => p.flatNo === owner.flatNo && p.month === month && p.year === Number(year)
+    // If month is 'All', it's hard to define a single 'paid' status for the whole year.
+    // We'll calculate total paid vs total expected for the period.
+    const flatPayments = payments.filter(
+      p => p.flatNo === owner.flatNo && 
+      (month === 'All' || p.month === month) && 
+      (year === 'All' || p.year === Number(year))
     );
+    
+    const amountPaid = flatPayments.reduce((sum, p) => sum + Number(p.amountPaid || 0), 0);
+    // Rough estimate: if month is All, expected is 12 * charge, else 1 * charge
+    const expected = month === 'All' ? owner.monthlyCharge * 12 : owner.monthlyCharge;
+    
     return {
       flatNo: owner.flatNo,
       ownerName: owner.ownerName,
       monthlyCharge: owner.monthlyCharge,
-      paid: !!payment,
-      amountPaid: payment?.amountPaid || 0,
-      paymentDate: payment?.paymentDate || null,
-      paymentMode: payment?.paymentMode || null,
-      status: payment ? 'PAID' : 'PENDING',
+      paid: amountPaid >= expected || flatPayments.length > 0, // simple heuristic
+      amountPaid,
+      paymentDate: flatPayments.length > 0 ? flatPayments[0].paymentDate : null,
+      paymentMode: flatPayments.length > 0 ? flatPayments[0].paymentMode : null,
+      status: (amountPaid >= expected || flatPayments.length > 0) ? 'PAID' : 'PENDING',
     };
   });
 }
@@ -87,18 +105,17 @@ export function buildPendingDues(owners, payments, month, year) {
 export function getFlatStats(owners, payments, month, year) {
   const active = owners.filter(o => o.active);
   const inactive = owners.filter(o => !o.active);
-  const paid = active.filter(o =>
-    payments.some(p => p.flatNo === o.flatNo && p.month === month && p.year === Number(year))
-  );
-  const pending = active.filter(o =>
-    !payments.some(p => p.flatNo === o.flatNo && p.month === month && p.year === Number(year))
-  );
+  
+  const dues = buildPendingDues(owners, payments, month, year);
+  const paid = dues.filter(d => d.paid).length;
+  const pending = dues.filter(d => !d.paid).length;
+  
   return {
     total: owners.length,
     active: active.length,
     inactive: inactive.length,
-    paid: paid.length,
-    pending: pending.length,
+    paid,
+    pending,
   };
 }
 

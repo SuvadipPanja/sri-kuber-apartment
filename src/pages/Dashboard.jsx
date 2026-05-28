@@ -71,9 +71,11 @@ export default function Dashboard() {
         </div>
         <div className="flex gap-1 items-center">
           <select className="form-select" style={{ width: 'auto' }} value={month} onChange={e => setSelectedMonth(e.target.value)}>
+            <option value="All">All Months</option>
             {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
-          <select className="form-select" style={{ width: 'auto' }} value={year} onChange={e => setSelectedYear(Number(e.target.value))}>
+          <select className="form-select" style={{ width: 'auto' }} value={year} onChange={e => setSelectedYear(e.target.value === 'All' ? 'All' : Number(e.target.value))}>
+            <option value="All">All Years</option>
             {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
@@ -120,7 +122,7 @@ export default function Dashboard() {
               <div className="kpi-icon"><Icon name="expense" size={18} /></div>
             </div>
             <div className="kpi-value rupee">{formatCurrency(spent)}</div>
-            <div className="kpi-meta"><span className="kpi-trend down">{expenses.filter(e => e.month === month && e.year === year).length} entries</span></div>
+            <div className="kpi-meta"><span className="kpi-trend down">{month === 'All' ? expenses.length : expenses.filter(e => e.month === month && e.year === year).length} entries</span></div>
           </div>
         </Link>
         <Link to="/other-income" style={{ textDecoration: 'none' }}>

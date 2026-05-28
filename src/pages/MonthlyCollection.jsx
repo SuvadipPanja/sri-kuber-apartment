@@ -3,6 +3,7 @@ import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
 import { formatCurrency, MONTHS } from '../utils/formatters';
 import { totalCollection, buildPendingDues } from '../utils/calculations';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import Icon from '../components/Icon';
 
 function mapPayment(p) { return { ...p, flatNo: p.flat_no, ownerName: p.owner_name, amountPaid: p.amount_paid, paymentDate: p.payment_date, paymentMode: p.payment_mode }; }
 function mapOwner(o)   { return { ...o, flatNo: o.flat_no, ownerName: o.owner_name, monthlyCharge: o.monthly_charge }; }
@@ -23,7 +24,7 @@ export default function MonthlyCollection() {
   
   const dues = buildPendingDues(owners, payments, month, year);
   const collected = totalCollection(payments, month, year);
-  const expected = owners.filter(o => o.active).reduce((sum, o) => sum + o.monthlyCharge, 0);
+  const expected = owners.filter(o => o.active).reduce((sum, o) => sum + (month === 'All' ? o.monthlyCharge * 12 : o.monthlyCharge), 0);
   const pending = expected - collected;
 
   const paidFlats = dues.filter(d => d.paid).length;
@@ -37,15 +38,17 @@ export default function MonthlyCollection() {
   return (
     <div>
       <div className="page-header">
-        <div>
-          <h1>📅 Monthly Collection</h1>
-          <p className="page-subtitle">Track maintenance collection for specific months</p>
+        <div className="page-header-left">
+          <h1 className="page-title"><Icon name="calendar" size={24} /> Monthly Collection</h1>
+          <p className="page-subtitle">Track maintenance collection for specific periods</p>
         </div>
         <div className="flex gap-1 items-center">
           <select className="form-select" style={{ width: 'auto' }} value={month} onChange={e => setSelectedMonth(e.target.value)}>
+            <option value="All">All Months</option>
             {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
-          <select className="form-select" style={{ width: 'auto' }} value={year} onChange={e => setSelectedYear(Number(e.target.value))}>
+          <select className="form-select" style={{ width: 'auto' }} value={year} onChange={e => setSelectedYear(e.target.value === 'All' ? 'All' : Number(e.target.value))}>
+            <option value="All">All Years</option>
             {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
@@ -84,7 +87,7 @@ export default function MonthlyCollection() {
 
       <div className="card">
         <div className="flex-between mb-2">
-          <h3 className="text-base m-0">📋 Detailed Status — {month} {year}</h3>
+          <div className="card-title"><Icon name="receipt" size={16} /> Detailed Status — {month} {year}</div>
           <span className="badge badge-primary">{owners.filter(o => o.active).length} Active Flats</span>
         </div>
         
@@ -100,7 +103,7 @@ export default function MonthlyCollection() {
                     <td className="rupee">{formatCurrency(d.monthlyCharge)}</td>
                     <td>
                       <span className={`badge ${d.paid ? 'badge-success' : 'badge-danger'}`}>
-                        {d.paid ? '✅ PAID' : '❌ PENDING'}
+                        {d.paid ? 'PAID' : 'PENDING'}
                       </span>
                     </td>
                     <td className="rupee">{d.paid ? <span className="text-success-c">{formatCurrency(d.amountPaid)}</span> : '—'}</td>

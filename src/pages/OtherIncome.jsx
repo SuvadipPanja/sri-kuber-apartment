@@ -25,9 +25,11 @@ export default function OtherIncome() {
         </div>
         <div className="flex gap-1 items-center">
           <select className="form-select" style={{ width: 'auto' }} value={month} onChange={e => setSelectedMonth(e.target.value)}>
+            <option value="All">All Months</option>
             {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
-          <select className="form-select" style={{ width: 'auto' }} value={year} onChange={e => setSelectedYear(Number(e.target.value))}>
+          <select className="form-select" style={{ width: 'auto' }} value={year} onChange={e => setSelectedYear(e.target.value === 'All' ? 'All' : Number(e.target.value))}>
+            <option value="All">All Years</option>
             {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
