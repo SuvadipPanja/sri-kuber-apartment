@@ -8,7 +8,7 @@ import { getInitials } from '../utils/formatters';
 import Icon from '../components/Icon';
 
 export default function MyAccount() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const { addToast } = useToast();
   const fileInputRef = useRef(null);
 
@@ -71,7 +71,8 @@ export default function MyAccount() {
     } else {
       setPhotoUrl(result.url);
       setPreview(null);
-      fileInputRef.current.value = '';
+      updateUser({ photoUrl: result.url });
+      if (fileInputRef.current) fileInputRef.current.value = '';
       addToast('Profile photo updated!', 'success');
     }
   };

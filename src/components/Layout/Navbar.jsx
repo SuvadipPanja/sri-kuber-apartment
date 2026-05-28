@@ -51,9 +51,13 @@ export default function Navbar({ collapsed, onMenuToggle }) {
             <button
               className="nav-avatar"
               onClick={() => setDropdownOpen(p => !p)}
-              style={{ cursor: 'pointer', border: dropdownOpen ? '2px solid var(--primary)' : '2px solid var(--border)' }}
+              style={{ cursor: 'pointer', border: dropdownOpen ? '2px solid var(--primary)' : '2px solid var(--border)', padding: user.photoUrl ? 0 : undefined }}
             >
-              {getInitials(user.ownerName)}
+              {user.photoUrl ? (
+                <img src={user.photoUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+              ) : (
+                getInitials(user.ownerName)
+              )}
             </button>
 
             {dropdownOpen && (

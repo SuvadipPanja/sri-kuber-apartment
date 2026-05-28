@@ -47,7 +47,7 @@ export function AuthProvider({ children }) {
 
       const { data: owner } = await supabase
         .from('owners')
-        .select('owner_name')
+        .select('owner_name, photo_url')
         .eq('flat_no', trimmedFlat)
         .single();
 
@@ -58,6 +58,7 @@ export function AuthProvider({ children }) {
         flatNo: data.flat_no,
         role,
         ownerName: owner?.owner_name || `Flat ${trimmedFlat}`,
+        photoUrl: owner?.photo_url || null,
       };
 
       setUser(userData);
@@ -65,6 +66,14 @@ export function AuthProvider({ children }) {
       return { success: true };
     } catch (err) {
       return { success: false, error: 'Connection error. Please check your internet and try again.' };
+    }
+  };
+
+  const updateUser = (updates) => {
+    if (user) {
+      const updatedUser = { ...user, ...updates };
+      setUser(updatedUser);
+      sessionStorage.setItem('ska_user', JSON.stringify(updatedUser));
     }
   };
 
@@ -77,7 +86,7 @@ export function AuthProvider({ children }) {
   const isSuperAdmin = () => user?.flatNo === SUPERADMIN_FLAT || user?.role === 'superadmin';
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, isSuperAdmin, SUPERADMIN_FLAT }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, updateUser, isSuperAdmin, SUPERADMIN_FLAT }}>
       {children}
     </AuthContext.Provider>
   );
