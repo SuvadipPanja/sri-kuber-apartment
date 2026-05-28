@@ -19,7 +19,6 @@ import NoticeBoard from './pages/NoticeBoard';
 import Complaints from './pages/Complaints';
 import MyAccount from './pages/MyAccount';
 import PrintableStatement from './pages/PrintableStatement';
-import WhatsAppShare from './pages/WhatsAppShare';
 
 // Admin Pages
 import AdminPanel from './pages/admin/AdminPanel';
@@ -70,7 +69,6 @@ function AppRoutes() {
 
         {/* Admin Only Routes */}
         <Route path="printable-statement" element={<AdminRoute><PrintableStatement /></AdminRoute>} />
-        <Route path="whatsapp-share" element={<AdminRoute><WhatsAppShare /></AdminRoute>} />
         <Route path="admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
         <Route path="admin/payments" element={<AdminRoute><ManagePayments /></AdminRoute>} />
         <Route path="admin/expenses" element={<AdminRoute><ManageExpenses /></AdminRoute>} />

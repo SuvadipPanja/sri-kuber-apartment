@@ -4,8 +4,9 @@ import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
 import { formatCurrency, MONTHS } from '../utils/formatters';
 import { totalCollection, totalExpenses, totalOtherIncome, calculateNetBalance, getFlatStats, buildPendingDues } from '../utils/calculations';
 import { Link } from 'react-router-dom';
+import Icon from '../components/Icon';
 
-const CHART_COLORS = ['#2ed573', '#ff4757', '#5a48e0', '#ffc107', '#00e5b0'];
+const CHART_COLORS = ['#22c55e', '#ef4444', '#6b7280'];
 
 function mapPayment(p) { return { ...p, flatNo: p.flat_no, ownerName: p.owner_name, amountPaid: p.amount_paid, paymentDate: p.payment_date, paymentMode: p.payment_mode }; }
 function mapExpense(e) { return { ...e, expenseType: e.expense_type, billAmount: e.bill_amount, builderContribution: e.builder_contribution, netExpense: e.net_expense, paidTo: e.paid_to }; }
@@ -17,6 +18,7 @@ export default function Dashboard() {
   const { data: rawPayments, loading: paymentsLoading } = useSupabaseTable('payments');
   const { data: rawExpenses, loading: expensesLoading } = useSupabaseTable('expenses');
   const { data: rawIncome } = useSupabaseTable('income');
+  const { data: notices } = useSupabaseTable('notices', q => q.order('created_at', { ascending: false }).limit(3));
 
   const defaultMonth = config?.current_month || 'May';
   const defaultYear = config?.current_year || 2026;
@@ -41,6 +43,10 @@ export default function Dashboard() {
 
   const isLoading = configLoading || ownersLoading || paymentsLoading || expensesLoading;
 
+  // Active notices
+  const now = new Date();
+  const activeNotices = notices.filter(n => !n.expires_at || new Date(n.expires_at) > now);
+
   const pieData = [
     { name: 'Paid', value: stats.paid },
     { name: 'Pending', value: stats.pending },
@@ -50,7 +56,7 @@ export default function Dashboard() {
   const barData = [
     { name: 'Collected', amount: collected, fill: 'var(--success)' },
     { name: 'Other Inc', amount: otherIncome, fill: 'var(--accent)' },
-    { name: 'Expenses',  amount: spent,     fill: 'var(--danger)' },
+    { name: 'Expenses',  amount: spent,      fill: 'var(--danger)' },
     { name: 'Net Bal',   amount: Math.max(0, netBalance), fill: 'var(--primary-light)' },
   ];
 
@@ -59,8 +65,8 @@ export default function Dashboard() {
   return (
     <div>
       <div className="page-header">
-        <div>
-          <h1>📊 Dashboard</h1>
+        <div className="page-header-left">
+          <h1 className="page-title"><Icon name="dashboard" size={24} /> Dashboard</h1>
           <p className="page-subtitle">Monthly summary for {month} {year}</p>
         </div>
         <div className="flex gap-1 items-center">
@@ -73,9 +79,24 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {config?.announcement && (
-        <div className="alert alert-info shadow-primary">
-          <span className="alert-icon">📢</span>
+      {/* Active Notices */}
+      {activeNotices.length > 0 && (
+        <div className="mb-3">
+          {activeNotices.slice(0, 2).map(n => (
+            <div key={n.id} className="alert alert-info mb-1" style={{ borderLeft: n.priority === 'urgent' ? '3px solid var(--danger)' : n.priority === 'important' ? '3px solid var(--warning)' : undefined }}>
+              <Icon name="megaphone" size={16} />
+              <div>
+                <strong>{n.title}</strong>
+                <span className="text-sm text-secondary-c" style={{ marginLeft: '0.75rem' }}>{n.content.length > 100 ? n.content.substring(0, 100) + '...' : n.content}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {config?.announcement && !activeNotices.length && (
+        <div className="alert alert-info">
+          <Icon name="megaphone" size={16} />
           <div>{config.announcement}</div>
         </div>
       )}
@@ -86,27 +107,27 @@ export default function Dashboard() {
           <div className="kpi-card kpi-green">
             <div className="kpi-top">
               <div className="kpi-label">Collection</div>
-              <div className="kpi-icon">💰</div>
+              <div className="kpi-icon"><Icon name="wallet" size={18} /></div>
             </div>
             <div className="kpi-value rupee">{formatCurrency(collected)}</div>
-            <div className="kpi-meta"><span className="kpi-trend up">↑ {stats.paid} paid</span></div>
+            <div className="kpi-meta"><span className="kpi-trend up">{stats.paid}/{stats.active} paid</span></div>
           </div>
         </Link>
         <Link to="/expenses" style={{ textDecoration: 'none' }}>
           <div className="kpi-card kpi-red">
             <div className="kpi-top">
               <div className="kpi-label">Expenses</div>
-              <div className="kpi-icon">📉</div>
+              <div className="kpi-icon"><Icon name="expense" size={18} /></div>
             </div>
             <div className="kpi-value rupee">{formatCurrency(spent)}</div>
-            <div className="kpi-meta"><span className="kpi-trend down">↓ {expenses.filter(e => e.month === month && e.year === year).length} entries</span></div>
+            <div className="kpi-meta"><span className="kpi-trend down">{expenses.filter(e => e.month === month && e.year === year).length} entries</span></div>
           </div>
         </Link>
         <Link to="/other-income" style={{ textDecoration: 'none' }}>
           <div className="kpi-card kpi-accent">
             <div className="kpi-top">
               <div className="kpi-label">Other Income</div>
-              <div className="kpi-icon">💵</div>
+              <div className="kpi-icon"><Icon name="income" size={18} /></div>
             </div>
             <div className="kpi-value rupee">{formatCurrency(otherIncome)}</div>
             <div className="kpi-meta"><span className="kpi-trend up">Extra income</span></div>
@@ -115,16 +136,28 @@ export default function Dashboard() {
         <div className="kpi-card kpi-blue">
           <div className="kpi-top">
             <div className="kpi-label">Net Balance</div>
-            <div className="kpi-icon">💳</div>
+            <div className="kpi-icon"><Icon name="chart" size={18} /></div>
           </div>
           <div className="kpi-value rupee">{formatCurrency(netBalance)}</div>
           <div className="kpi-meta"><span className="kpi-trend flat">Opening: {formatCurrency(openingBalance)}</span></div>
         </div>
+        <Link to="/pending-dues" style={{ textDecoration: 'none' }}>
+          <div className="kpi-card" style={{ '--kpi-color': stats.pending > 0 ? 'var(--warning)' : 'var(--success)' }}>
+            <div className="kpi-top">
+              <div className="kpi-label">Pending Dues</div>
+              <div className="kpi-icon"><Icon name="clock" size={18} /></div>
+            </div>
+            <div className="kpi-value">{stats.pending}</div>
+            <div className="kpi-meta"><span className={`kpi-trend ${stats.pending > 0 ? 'down' : 'up'}`}>{stats.pending > 0 ? `${stats.pending} flats unpaid` : 'All paid!'}</span></div>
+          </div>
+        </Link>
       </div>
 
       <div className="charts-grid">
         <div className="card">
-          <h3 className="chart-title">💳 Collection Status</h3>
+          <div className="card-header">
+            <span className="card-title"><Icon name="chart" size={16} /> Collection Status</span>
+          </div>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
               <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={85} paddingAngle={4} dataKey="value" stroke="var(--bg-card)" strokeWidth={2}>
@@ -136,7 +169,9 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </div>
         <div className="card">
-          <h3 className="chart-title">📊 Financial Summary</h3>
+          <div className="card-header">
+            <span className="card-title"><Icon name="chart" size={16} /> Financial Summary</span>
+          </div>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={barData} barSize={32} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <XAxis dataKey="name" tick={{ fill: 'var(--text-secondary)', fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} />
@@ -152,14 +187,14 @@ export default function Dashboard() {
 
       <div className="card">
         <div className="flex-between mb-2">
-          <h3 className="text-base m-0">📋 {month} {year} — Collection Status</h3>
-          <Link to="/pending-dues" className="btn btn-outline btn-sm">View Pending ⏳</Link>
+          <div className="card-title"><Icon name="receipt" size={16} /> {month} {year} — Collection Status</div>
+          <Link to="/pending-dues" className="btn btn-outline btn-sm"><Icon name="clock" size={14} /> View Pending</Link>
         </div>
-        <div className="table-wrapper">
+        <div className="table-scroll">
           <table className="data-table">
             <thead>
               <tr>
-                <th>Flat No</th><th>Owner</th><th>Charge</th><th>Status</th>
+                <th>Flat</th><th>Owner</th><th>Charge</th><th>Status</th>
                 <th>Amount Paid</th><th>Date</th><th>Mode</th>
               </tr>
             </thead>
@@ -171,7 +206,7 @@ export default function Dashboard() {
                   <td className="rupee">{formatCurrency(d.monthlyCharge)}</td>
                   <td>
                     <span className={`badge ${d.paid ? 'badge-success' : 'badge-danger'}`}>
-                      {d.paid ? '✅ Paid' : '❌ Pending'}
+                      {d.paid ? 'Paid' : 'Pending'}
                     </span>
                   </td>
                   <td className="rupee">{d.paid ? <span className="text-success-c">{formatCurrency(d.amountPaid)}</span> : '—'}</td>

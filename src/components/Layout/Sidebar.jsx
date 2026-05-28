@@ -18,8 +18,7 @@ const infoNav = [
   { label: 'My Account',          icon: 'user',       path: '/my-account' },
 ];
 const adminReportsNav = [
-  { label: 'Printable Statement', icon: 'printer',    path: '/printable-statement' },
-  { label: 'WhatsApp Share',      icon: 'share',      path: '/whatsapp-share' },
+  { label: 'Statement & Reports', icon: 'printer',    path: '/printable-statement' },
 ];
 const adminNav = [
   { label: 'Admin Panel',         icon: 'shield',     path: '/admin',             exact: true },

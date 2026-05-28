@@ -1,6 +1,7 @@
 import { useSupabaseTable } from '../hooks/useSupabase';
 import { useAuth } from '../context/AuthContext';
 import { getInitials } from '../utils/formatters';
+import Icon from '../components/Icon';
 
 export default function FlatDirectory() {
   const { isSuperAdmin } = useAuth();
@@ -9,59 +10,51 @@ export default function FlatDirectory() {
   const inactiveOwners = rawOwners.filter(o => !o.active);
 
   const OwnerCard = ({ owner }) => (
-    <div className="card card-glass flex gap-2 items-center p-3 relative overflow-hidden h-full">
-      <div className="relative flex-shrink-0 z-10">
+    <div className="card" style={{ padding: '1.25rem' }}>
+      <div className="flex gap-2 items-center">
         {owner.photo_url ? (
           <img
             src={owner.photo_url}
             alt={owner.owner_name}
-            className="rounded-full shadow-md"
-            style={{ width: 72, height: 72, objectFit: 'cover', border: '2px solid var(--border-bright)' }}
+            className="rounded-full"
+            style={{ width: 56, height: 56, objectFit: 'cover', border: '2px solid var(--border)', flexShrink: 0 }}
             onError={e => { e.target.style.display = 'none'; }}
           />
         ) : (
-          <div 
-            className="rounded-full shadow-primary flex-center text-white fw-bold text-xl"
-            style={{ width: 72, height: 72, background: 'var(--grad-primary)', border: '2px solid var(--border-bright)' }}
+          <div
+            className="rounded-full flex-center fw-bold"
+            style={{ width: 56, height: 56, background: 'var(--grad-primary)', color: 'white', fontSize: '1rem', flexShrink: 0 }}
           >
             {getInitials(owner.owner_name)}
           </div>
         )}
+        <div className="flex-1 min-w-0">
+          <div className="fw-bold text-white text-base truncate mb-1">{owner.owner_name}</div>
+          <div className="flex items-center gap-1 flex-wrap">
+            <span className="badge badge-primary" style={{ fontSize: '0.65rem' }}>Flat {owner.flat_no}</span>
+            {isSuperAdmin() && (
+              <span className="badge badge-accent" style={{ fontSize: '0.65rem' }}>₹{owner.monthly_charge}/mo</span>
+            )}
+            {owner.notes && <span className="badge badge-gold" style={{ fontSize: '0.65rem' }}>{owner.notes}</span>}
+          </div>
+        </div>
       </div>
-      <div className="flex-1 min-w-0 z-10">
-        <div className="flex items-center gap-1 mb-1">
-          <strong className="text-white text-base truncate">{owner.owner_name}</strong>
-          {owner.notes && <span className="badge badge-accent ml-1" style={{ fontSize: '0.65rem' }}>{owner.notes}</span>}
-        </div>
-        <div className="flex items-center gap-1 mb-2 flex-wrap">
-          <span className="badge badge-info">Flat {owner.flat_no}</span>
-          {isSuperAdmin() && (
-            <span className="badge badge-success">₹{owner.monthly_charge}/mo</span>
-          )}
-        </div>
+      <div className="mt-2" style={{ paddingLeft: '0.25rem' }}>
         {owner.phone && (
           <div className="flex items-center gap-1 text-sm text-secondary-c mb-1">
-            <span>📞</span>
-            <a href={`tel:${owner.phone}`} className="text-accent-c hover-primary truncate">{owner.phone}</a>
+            <Icon name="phone" size={13} />
+            <a href={`tel:${owner.phone}`} style={{ color: 'var(--text-secondary)' }}>{owner.phone}</a>
           </div>
         )}
         {owner.email && (
           <div className="flex items-center gap-1 text-sm text-secondary-c">
-            <span>📧</span>
-            <a href={`mailto:${owner.email}`} className="text-accent-c hover-primary truncate">{owner.email}</a>
+            <Icon name="mail" size={13} />
+            <a href={`mailto:${owner.email}`} className="truncate" style={{ color: 'var(--text-secondary)' }}>{owner.email}</a>
           </div>
         )}
         {!owner.phone && !owner.email && (
           <div className="text-xs text-muted-c mt-1">Contact details not added</div>
         )}
-      </div>
-      
-      {/* Decorative background flat number */}
-      <div 
-        className="absolute font-display fw-black text-muted-c select-none" 
-        style={{ fontSize: '6rem', right: '-10%', bottom: '-20%', opacity: 0.1, zIndex: 0 }}
-      >
-        {owner.flat_no}
       </div>
     </div>
   );
@@ -71,34 +64,36 @@ export default function FlatDirectory() {
   return (
     <div>
       <div className="page-header">
-        <div>
-          <h1>👥 Flat Directory</h1>
+        <div className="page-header-left">
+          <h1 className="page-title"><Icon name="users" size={24} /> Flat Directory</h1>
           <p className="page-subtitle">All residents of Sri Kuber Apartment</p>
         </div>
         <div className="flex gap-1">
-          <span className="badge badge-success">✅ {activeOwners.length} Active</span>
-          <span className="badge badge-muted">🔕 {inactiveOwners.length} Vacant</span>
+          <span className="badge badge-success">{activeOwners.length} Active</span>
+          <span className="badge badge-muted">{inactiveOwners.length} Vacant</span>
         </div>
       </div>
 
       <div className="section-divider">Active Residents</div>
-      <div className="grid-3 mb-3">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }} className="mb-3">
         {activeOwners.map(o => <OwnerCard key={o.flat_no} owner={o} />)}
       </div>
 
       {inactiveOwners.length > 0 && (
         <>
           <div className="section-divider">Vacant / Inactive Flats</div>
-          <div className="grid-3">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
             {inactiveOwners.map(o => (
-              <div key={o.flat_no} className="card p-3 opacity-50 flex items-center gap-2">
-                <div 
-                  className="rounded-full flex-center text-xl bg-elevated"
-                  style={{ width: 56, height: 56, border: '1px dashed var(--text-muted)' }}
-                >🏚️</div>
+              <div key={o.flat_no} className="card flex items-center gap-2" style={{ padding: '1rem', opacity: 0.5 }}>
+                <div
+                  className="rounded-full flex-center"
+                  style={{ width: 44, height: 44, border: '1px dashed var(--text-muted)', color: 'var(--text-muted)' }}
+                >
+                  <Icon name="home" size={18} />
+                </div>
                 <div>
                   <div className="fw-semi text-base mb-1">Flat {o.flat_no}</div>
-                  <span className="badge badge-muted">Vacant / Inactive</span>
+                  <span className="badge badge-muted">Vacant</span>
                 </div>
               </div>
             ))}

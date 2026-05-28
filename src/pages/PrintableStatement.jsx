@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
 import { formatCurrency, MONTHS } from '../utils/formatters';
 import { buildPendingDues, totalCollection, totalExpenses, totalOtherIncome, calculateNetBalance } from '../utils/calculations';
+import Icon from '../components/Icon';
 
 function mapPayment(p) { return { ...p, flatNo: p.flat_no, ownerName: p.owner_name, amountPaid: p.amount_paid, paymentDate: p.payment_date, paymentMode: p.payment_mode }; }
 function mapExpense(e) { return { ...e, expenseType: e.expense_type, netExpense: e.net_expense }; }
@@ -39,24 +40,62 @@ export default function PrintableStatement() {
 
   const handlePrint = () => window.print();
 
+  // WhatsApp share
+  const handleWhatsAppShare = () => {
+    const societyName = config?.society_name || 'Sri Kuber Apartment';
+    let msg = `*${societyName}*\n`;
+    msg += `*Monthly Statement — ${month} ${year}*\n`;
+    msg += `Generated: ${new Date().toLocaleDateString('en-IN')}\n`;
+    msg += `─────────────────\n\n`;
+
+    msg += `*Financial Summary*\n`;
+    msg += `Opening Balance: ${formatCurrency(openingBalance)}\n`;
+    msg += `(+) Collection: ${formatCurrency(collected)}\n`;
+    msg += `(+) Other Income: ${formatCurrency(otherIncome)}\n`;
+    msg += `(-) Expenses: ${formatCurrency(spent)}\n`;
+    msg += `*Net Balance: ${formatCurrency(netBalance)}*\n\n`;
+
+    msg += `*Payment Status (${paid.length} Paid / ${pending.length} Pending)*\n`;
+    dues.forEach(d => {
+      const status = d.paid ? '✅' : '❌';
+      msg += `${status} Flat ${d.flatNo} — ${d.ownerName}`;
+      if (d.paid) msg += ` — ${formatCurrency(d.amountPaid)}`;
+      msg += `\n`;
+    });
+
+    if (monthExpenses.length > 0) {
+      msg += `\n*Expenses (${monthExpenses.length} entries)*\n`;
+      monthExpenses.forEach(e => {
+        msg += `• ${e.expenseType}: ${formatCurrency(e.netExpense)}\n`;
+      });
+    }
+
+    msg += `\n_Sent from ${societyName} Portal_`;
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+  };
+
   return (
     <div>
       <div className="page-header no-print">
-        <div>
-          <h1>🖨️ Printable Statement</h1>
-          <p className="page-subtitle">Monthly maintenance statement</p>
+        <div className="page-header-left">
+          <h1 className="page-title"><Icon name="printer" size={24} /> Statement & Reports</h1>
+          <p className="page-subtitle">Print or share monthly maintenance statement</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+        <div className="flex gap-1 items-center flex-wrap">
           <select className="form-select" style={{ width: 'auto', padding: '0.5rem 2rem 0.5rem 0.75rem' }}
-            value={month} onChange={e => setSelectedMonth(e.target.value)} id="print-month-select">
+            value={month} onChange={e => setSelectedMonth(e.target.value)}>
             {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
           <select className="form-select" style={{ width: 'auto', padding: '0.5rem 2rem 0.5rem 0.75rem' }}
-            value={year} onChange={e => setSelectedYear(Number(e.target.value))} id="print-year-select">
+            value={year} onChange={e => setSelectedYear(Number(e.target.value))}>
             {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
           </select>
-          <button className="btn btn-primary" onClick={handlePrint} id="print-btn">
-            🖨️ Print / Save PDF
+          <button className="btn btn-primary" onClick={handlePrint}>
+            <Icon name="printer" size={16} /> Print / PDF
+          </button>
+          <button className="btn btn-success" onClick={handleWhatsAppShare}>
+            <Icon name="share" size={16} /> WhatsApp
           </button>
         </div>
       </div>
@@ -64,8 +103,8 @@ export default function PrintableStatement() {
       {/* Printable Area */}
       <div ref={printRef} className="print-page card" style={{ maxWidth: 800, margin: '0 auto' }}>
         {/* Header */}
-        <div className="print-header" style={{ textAlign: 'center', borderBottom: '2px solid var(--border)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>🏠 {config?.society_name || 'Sri Kuber Apartment'}</h2>
+        <div style={{ textAlign: 'center', borderBottom: '2px solid var(--border)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>{config?.society_name || 'Sri Kuber Apartment'}</h2>
           <p style={{ color: 'var(--text-secondary)' }}>{config?.address}, {config?.city}</p>
           <h3 style={{ marginTop: '0.75rem', fontSize: '1.1rem', color: 'var(--primary-light)' }}>
             Monthly Maintenance Statement — {month} {year}
@@ -84,16 +123,16 @@ export default function PrintableStatement() {
             ['(-) Expenses',    formatCurrency(spent),         'var(--danger)'],
             ['Net Balance',     formatCurrency(netBalance),    'var(--primary-light)'],
           ].map(([label, val, color]) => (
-            <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.6rem 1rem', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)' }}>
+            <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.6rem 1rem', background: 'var(--bg-elevated)', borderRadius: '8px' }}>
               <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{label}</span>
-              <strong style={{ color: color || 'var(--text-white)', fontFamily: 'var(--font-heading)' }}>{val}</strong>
+              <strong style={{ color: color || 'var(--text-white)' }}>{val}</strong>
             </div>
           ))}
         </div>
 
         {/* Payments */}
-        <div className="section-title">Payment Records</div>
-        <div className="table-wrapper" style={{ marginBottom: '1.5rem' }}>
+        <div className="card-title mb-2"><Icon name="wallet" size={16} /> Payment Records</div>
+        <div className="table-scroll" style={{ marginBottom: '1.5rem' }}>
           <table className="data-table">
             <thead><tr><th>Flat</th><th>Owner</th><th>Amount</th><th>Date</th><th>Mode</th><th>Status</th></tr></thead>
             <tbody>
@@ -104,7 +143,7 @@ export default function PrintableStatement() {
                   <td className="rupee">{d.paid ? formatCurrency(d.amountPaid) : '—'}</td>
                   <td>{d.paymentDate ? new Date(d.paymentDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '—'}</td>
                   <td>{d.paymentMode || '—'}</td>
-                  <td><span className={`badge ${d.paid ? 'badge-success' : 'badge-danger'}`}>{d.paid ? '✅ Paid' : '❌ Pending'}</span></td>
+                  <td><span className={`badge ${d.paid ? 'badge-success' : 'badge-danger'}`}>{d.paid ? 'Paid' : 'Pending'}</span></td>
                 </tr>
               ))}
             </tbody>
@@ -112,8 +151,8 @@ export default function PrintableStatement() {
         </div>
 
         {/* Expenses */}
-        <div className="section-title">Expense Records</div>
-        <div className="table-wrapper" style={{ marginBottom: '1.5rem' }}>
+        <div className="card-title mb-2"><Icon name="expense" size={16} /> Expense Records</div>
+        <div className="table-scroll" style={{ marginBottom: '1.5rem' }}>
           <table className="data-table">
             <thead><tr><th>Date</th><th>Description</th><th>Bill Amt</th><th>Builder</th><th>Net Expense</th><th>Paid To</th></tr></thead>
             <tbody>
@@ -134,7 +173,7 @@ export default function PrintableStatement() {
 
         {/* Footer */}
         <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
-          <p>Sri Kuber Apartment — Society Maintenance Management System</p>
+          <p>{config?.society_name || 'Sri Kuber Apartment'} — Society Maintenance Management System</p>
           <p>Secretary: Suvadip Panja (Flat 301)</p>
         </div>
       </div>
