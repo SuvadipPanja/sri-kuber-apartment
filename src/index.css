@@ -1492,3 +1492,124 @@ code { font-family: var(--font-mono); background: var(--bg-elevated); padding: 0
   transition: all var(--t-fast);
 }
 .attach-existing:hover { background: rgba(59,130,246,0.15); }
+
+/* ================================================================
+   PENDING DUES — Flat Status Grid
+   ================================================================ */
+.flat-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(152px, 1fr));
+  gap: 0.75rem;
+  padding: 0.25rem 0;
+}
+
+.flat-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1rem 0.75rem 0.85rem;
+  border-radius: var(--r-lg);
+  border: 1.5px solid var(--border);
+  background: var(--bg-elevated);
+  text-align: center;
+  transition: transform var(--t-fast), box-shadow var(--t-fast);
+  position: relative;
+  overflow: hidden;
+}
+.flat-chip::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.flat-chip:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+.chip-paid   { border-color: rgba(34,197,94,0.25);  background: rgba(34,197,94,0.05);  }
+.chip-pending { border-color: rgba(239,68,68,0.25); background: rgba(239,68,68,0.05); }
+.chip-inactive { border-color: var(--border-subtle); background: var(--bg-surface); opacity: 0.6; }
+
+.chip-paid::before    { background: var(--grad-success); }
+.chip-pending::before { background: var(--grad-danger); }
+.chip-inactive::before { background: var(--border); }
+
+.chip-status-icon {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 0.15rem;
+}
+.chip-paid    .chip-status-icon { background: rgba(34,197,94,0.15);  color: var(--success); }
+.chip-pending .chip-status-icon { background: rgba(239,68,68,0.15); color: var(--danger); }
+.chip-inactive .chip-status-icon { background: var(--bg-elevated); color: var(--text-muted); }
+
+.chip-flat-no {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.2px;
+}
+.chip-owner {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 130px;
+}
+.chip-amount {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--success);
+  margin-top: 0.1rem;
+}
+.chip-paid .chip-amount   { color: var(--success); }
+.chip-pending .chip-amount { color: var(--danger); }
+
+/* ================================================================
+   PENDING DUES — Tab Filter
+   ================================================================ */
+.dues-tab-group {
+  display: flex;
+  gap: 0.25rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 0.2rem;
+}
+.dues-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.85rem;
+  border-radius: calc(var(--r-md) - 2px);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--t-fast);
+  white-space: nowrap;
+}
+.dues-tab:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+.dues-tab.active {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+  font-weight: 600;
+}
+.tab-count {
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--r-full);
+  min-width: 18px;
+  text-align: center;
+}
+.dues-tab.active .tab-count {
+  background: var(--primary-glow);
+  color: var(--primary-light);
+}
