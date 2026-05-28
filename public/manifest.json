@@ -1,0 +1,18 @@
+{
+  "name": "Sri Kuber Apartment",
+  "short_name": "SKA Portal",
+  "description": "Society Maintenance Portal for Sri Kuber Apartment",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080813",
+  "theme_color": "#7c6aff",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/society.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

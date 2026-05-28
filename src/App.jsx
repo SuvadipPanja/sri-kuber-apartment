@@ -15,6 +15,8 @@ import Expenses from './pages/Expenses';
 import OtherIncome from './pages/OtherIncome';
 import SocietyInfo from './pages/SocietyInfo';
 import FlatDirectory from './pages/FlatDirectory';
+import NoticeBoard from './pages/NoticeBoard';
+import Complaints from './pages/Complaints';
 import MyAccount from './pages/MyAccount';
 import PrintableStatement from './pages/PrintableStatement';
 import WhatsAppShare from './pages/WhatsAppShare';
@@ -25,6 +27,8 @@ import ManagePayments from './pages/admin/ManagePayments';
 import ManageExpenses from './pages/admin/ManageExpenses';
 import ManageIncome from './pages/admin/ManageIncome';
 import ManageOwners from './pages/admin/ManageOwners';
+import ManageNotices from './pages/admin/ManageNotices';
+import ManageComplaints from './pages/admin/ManageComplaints';
 import SocietySettings from './pages/admin/SocietySettings';
 import ResetPassword from './pages/admin/ResetPassword';
 
@@ -50,7 +54,7 @@ function AppRoutes() {
 
       <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
-        
+
         {/* User Routes */}
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="monthly-collection" element={<MonthlyCollection />} />
@@ -60,9 +64,11 @@ function AppRoutes() {
         <Route path="other-income" element={<OtherIncome />} />
         <Route path="society-info" element={<SocietyInfo />} />
         <Route path="flat-directory" element={<FlatDirectory />} />
+        <Route path="notice-board" element={<NoticeBoard />} />
+        <Route path="complaints" element={<Complaints />} />
         <Route path="my-account" element={<MyAccount />} />
 
-        {/* Admin Routes */}
+        {/* Admin Only Routes */}
         <Route path="printable-statement" element={<AdminRoute><PrintableStatement /></AdminRoute>} />
         <Route path="whatsapp-share" element={<AdminRoute><WhatsAppShare /></AdminRoute>} />
         <Route path="admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
@@ -70,6 +76,8 @@ function AppRoutes() {
         <Route path="admin/expenses" element={<AdminRoute><ManageExpenses /></AdminRoute>} />
         <Route path="admin/income" element={<AdminRoute><ManageIncome /></AdminRoute>} />
         <Route path="admin/owners" element={<AdminRoute><ManageOwners /></AdminRoute>} />
+        <Route path="admin/notices" element={<AdminRoute><ManageNotices /></AdminRoute>} />
+        <Route path="admin/complaints" element={<AdminRoute><ManageComplaints /></AdminRoute>} />
         <Route path="admin/settings" element={<AdminRoute><SocietySettings /></AdminRoute>} />
         <Route path="admin/reset-password" element={<AdminRoute><ResetPassword /></AdminRoute>} />
       </Route>

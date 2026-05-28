@@ -1241,3 +1241,82 @@ code { font-family: var(--font-mono); background: var(--bg-elevated); padding: 0
 .invisible     { visibility: hidden; }
 .rounded-full  { border-radius: var(--r-full); }
 .border-top    { border-top: 1px solid var(--border-subtle); padding-top: 1rem; margin-top: 1rem; }
+.h-full        { height: 100%; }
+.py-2          { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+.tracking-wider { letter-spacing: 0.06em; }
+.m-0           { margin: 0; }
+.ml-2          { margin-left: 1rem; }
+.w-1\/2        { width: 50%; }
+
+/* ================================================================
+   NAVBAR USER DROPDOWN
+   ================================================================ */
+.nav-user-section {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nav-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 200px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-xl);
+  padding: 0.5rem;
+  z-index: 999;
+}
+
+.nav-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: var(--r-sm);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--t-fast);
+  text-align: left;
+}
+.nav-dropdown-item:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+.nav-dropdown-item.text-danger-c:hover {
+  background: rgba(255, 71, 87, 0.1);
+  color: var(--danger) !important;
+}
+
+.nav-menu-btn {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .nav-menu-btn { display: flex !important; }
+  .nav-user-info { display: none; }
+  .grid-2 { grid-template-columns: 1fr !important; }
+}
+
+/* ================================================================
+   PROGRESS BAR ANIMATION
+   ================================================================ */
+@keyframes shimmer {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+.empty-state-icon {
+  color: var(--text-muted);
+  opacity: 0.3;
+  margin: 0 auto 1rem;
+}
