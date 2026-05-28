@@ -1,96 +1,116 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
 import { formatCurrency, MONTHS } from '../utils/formatters';
-import { buildPendingDues, totalCollection, totalExpenses, totalOtherIncome, calculateNetBalance } from '../utils/calculations';
+import {
+  buildPendingDues, totalCollection, totalExpenses,
+  totalOtherIncome, calculateNetBalance,
+} from '../utils/calculations';
 import Icon from '../components/Icon';
 
+const MONTHS_ORDER = ['January','February','March','April','May','June',
+  'July','August','September','October','November','December'];
+
+function getPrevMonthYear(month, year) {
+  if (month === 'All' || year === 'All') return null;
+  const idx = MONTHS_ORDER.indexOf(month);
+  if (idx <= 0) return { month: 'December', year: Number(year) - 1 };
+  return { month: MONTHS_ORDER[idx - 1], year: Number(year) };
+}
+
 function mapPayment(p) { return { ...p, flatNo: p.flat_no, ownerName: p.owner_name, amountPaid: p.amount_paid, paymentDate: p.payment_date, paymentMode: p.payment_mode }; }
-function mapExpense(e) { return { ...e, expenseType: e.expense_type, netExpense: e.net_expense }; }
+function mapExpense(e) { return { ...e, expenseType: e.expense_type, billAmount: e.bill_amount, builderContribution: e.builder_contribution, netExpense: e.net_expense, paidTo: e.paid_to }; }
 function mapOwner(o)   { return { ...o, flatNo: o.flat_no, ownerName: o.owner_name, monthlyCharge: o.monthly_charge }; }
+
+const fmtDate = (str) => {
+  if (!str) return '—';
+  return new Date(str).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+};
 
 export default function PrintableStatement() {
   const { config } = useConfig();
-  const { data: rawOwners } = useSupabaseTable('owners');
+  const { data: rawOwners }   = useSupabaseTable('owners');
   const { data: rawPayments } = useSupabaseTable('payments');
   const { data: rawExpenses } = useSupabaseTable('expenses');
-  const { data: rawIncome } = useSupabaseTable('income');
+  const { data: rawIncome }   = useSupabaseTable('income');
 
   const [selectedMonth, setSelectedMonth] = useState(null);
-  const [selectedYear, setSelectedYear] = useState(null);
-  const printRef = useRef();
+  const [selectedYear,  setSelectedYear]  = useState(null);
 
   const month = selectedMonth ?? config?.current_month ?? 'May';
-  const year = selectedYear ?? config?.current_year ?? 2026;
+  const year  = selectedYear  ?? config?.current_year  ?? 2026;
 
-  const owners = rawOwners.map(mapOwner);
+  const owners   = rawOwners.map(mapOwner);
   const payments = rawPayments.map(mapPayment);
   const expenses = rawExpenses.map(mapExpense);
-  const income = rawIncome;
+  const income   = rawIncome;
 
-  const openingBalance = config?.carry_forward?.[`${month}-${year}`] || 0;
-  const collected = totalCollection(payments, month, year);
-  const spent = totalExpenses(expenses, month, year);
+  const prev          = getPrevMonthYear(month, year);
+  const prevOpenBal   = prev ? (config?.carry_forward?.[`${prev.month}-${prev.year}`] || 0) : 0;
+  const prevCollected = prev ? totalCollection(payments, prev.month, prev.year) : 0;
+  const prevSpent     = prev ? totalExpenses(expenses, prev.month, prev.year) : 0;
+  const prevOtherInc  = prev ? totalOtherIncome(income, prev.month, prev.year) : 0;
+  const carryForward  = prev ? (prevOpenBal + prevCollected + prevOtherInc - prevSpent) : 0;
+
+  const manualOpening  = config?.carry_forward?.[`${month}-${year}`] || 0;
+  const openingBalance = (prev && month !== 'All' && year !== 'All') ? carryForward : manualOpening;
+
+  const collected   = totalCollection(payments, month, year);
+  const spent       = totalExpenses(expenses, month, year);
   const otherIncome = totalOtherIncome(income, month, year);
-  const netBalance = calculateNetBalance(payments, expenses, income, month, year, openingBalance);
-  const dues = buildPendingDues(owners, payments, month, year);
+  const netBalance  = calculateNetBalance(payments, expenses, income, month, year, openingBalance);
+  const dues        = buildPendingDues(owners, payments, month, year);
 
   const monthExpenses = expenses.filter(e => e.month === month && e.year === Number(year));
-  const paid = dues.filter(d => d.paid);
+  const paid    = dues.filter(d => d.paid);
   const pending = dues.filter(d => !d.paid);
+
+  const societyName = config?.society_name || 'Sri Kuber Apartment';
+  const generatedOn = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
 
   const handlePrint = () => window.print();
 
-  // WhatsApp share
   const handleWhatsAppShare = () => {
-    const societyName = config?.society_name || 'Sri Kuber Apartment';
     let msg = `*${societyName}*\n`;
     msg += `*Monthly Statement — ${month} ${year}*\n`;
-    msg += `Generated: ${new Date().toLocaleDateString('en-IN')}\n`;
-    msg += `─────────────────\n\n`;
-
-    msg += `*Financial Summary*\n`;
-    msg += `Opening Balance: ${formatCurrency(openingBalance)}\n`;
-    msg += `(+) Collection: ${formatCurrency(collected)}\n`;
+    msg += `Generated: ${generatedOn}\n`;
+    msg += `─────────────────────\n\n`;
+    if (prev) msg += `(→) Carry Forward (${prev.month}): ${formatCurrency(carryForward)}\n`;
+    msg += `(+) Collection:   ${formatCurrency(collected)}\n`;
     msg += `(+) Other Income: ${formatCurrency(otherIncome)}\n`;
-    msg += `(-) Expenses: ${formatCurrency(spent)}\n`;
-    msg += `*Net Balance: ${formatCurrency(netBalance)}*\n\n`;
-
+    msg += `(-) Expenses:     ${formatCurrency(spent)}\n`;
+    msg += `*Net Balance:     ${formatCurrency(netBalance)}*\n\n`;
     msg += `*Payment Status (${paid.length} Paid / ${pending.length} Pending)*\n`;
     dues.forEach(d => {
-      const status = d.paid ? '✅' : '❌';
-      msg += `${status} Flat ${d.flatNo} — ${d.ownerName}`;
+      msg += `${d.paid ? '✅' : '❌'} Flat ${d.flatNo} — ${d.ownerName}`;
       if (d.paid) msg += ` — ${formatCurrency(d.amountPaid)}`;
-      msg += `\n`;
+      msg += '\n';
     });
-
     if (monthExpenses.length > 0) {
       msg += `\n*Expenses (${monthExpenses.length} entries)*\n`;
-      monthExpenses.forEach(e => {
-        msg += `• ${e.expenseType}: ${formatCurrency(e.netExpense)}\n`;
-      });
+      monthExpenses.forEach(e => { msg += `• ${e.expenseType}: ${formatCurrency(e.netExpense)}\n`; });
     }
-
     msg += `\n_Sent from ${societyName} Portal_`;
-
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
+  const pCell = { padding: '0.55rem 1rem', borderBottom: '1px solid var(--border-subtle)', fontSize: '0.84rem', color: 'var(--text-primary)', verticalAlign: 'middle' };
+  const pHead = { padding: '0.55rem 1rem', fontSize: '0.69rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-muted)', borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' };
+
   return (
     <div>
+      {/* Controls */}
       <div className="page-header no-print">
         <div className="page-header-left">
           <h1 className="page-title"><Icon name="printer" size={24} /> Statement & Reports</h1>
-          <p className="page-subtitle">Print or share monthly maintenance statement</p>
+          <p className="page-subtitle">Print or share the monthly maintenance statement</p>
         </div>
         <div className="flex gap-1 items-center flex-wrap">
-          <select className="form-select" style={{ width: 'auto', padding: '0.5rem 2rem 0.5rem 0.75rem' }}
-            value={month} onChange={e => setSelectedMonth(e.target.value)}>
-            <option value="All">All Months</option>
+          <select className="form-select" style={{ width: 'auto' }} value={month}
+            onChange={e => setSelectedMonth(e.target.value)}>
             {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
-          <select className="form-select" style={{ width: 'auto', padding: '0.5rem 2rem 0.5rem 0.75rem' }}
-            value={year} onChange={e => setSelectedYear(e.target.value === 'All' ? 'All' : Number(e.target.value))}>
-            <option value="All">All Years</option>
+          <select className="form-select" style={{ width: 'auto' }} value={year}
+            onChange={e => setSelectedYear(Number(e.target.value))}>
             {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
           </select>
           <button className="btn btn-primary" onClick={handlePrint}>
@@ -102,81 +122,164 @@ export default function PrintableStatement() {
         </div>
       </div>
 
-      {/* Printable Area */}
-      <div ref={printRef} className="print-page card" style={{ maxWidth: 800, margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', borderBottom: '2px solid var(--border)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>{config?.society_name || 'Sri Kuber Apartment'}</h2>
-          <p style={{ color: 'var(--text-secondary)' }}>{config?.address}, {config?.city}</p>
-          <h3 style={{ marginTop: '0.75rem', fontSize: '1.1rem', color: 'var(--primary-light)' }}>
-            Monthly Maintenance Statement — {month} {year}
-          </h3>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-            Generated: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
-          </p>
+      {/* Document */}
+      <div className="card" style={{ maxWidth: 820, margin: '0 auto' }}>
+
+        {/* Document Header */}
+        <div style={{ textAlign: 'center', marginBottom: '1.75rem', paddingBottom: '1.25rem', borderBottom: '2px solid var(--border)' }}>
+          <div style={{ fontSize: '1.55rem', fontWeight: 800, color: 'var(--text-white)', letterSpacing: '-0.02em', marginBottom: '0.2rem' }}>
+            {societyName}
+          </div>
+          {config?.address && (
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.1rem' }}>
+              {config.address}{config.city ? `, ${config.city}` : ''}
+            </div>
+          )}
+          <div style={{ marginTop: '0.8rem', display: 'inline-block', background: 'var(--primary-glow)', border: '1px solid var(--border-bright)', borderRadius: 'var(--r-lg)', padding: '0.4rem 1.25rem' }}>
+            <span style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--primary-light)' }}>
+              Monthly Maintenance Statement — {month} {year}
+            </span>
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+            Generated: {generatedOn}
+          </div>
         </div>
 
         {/* Financial Summary */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.5rem' }}>
-          {[
-            ['Opening Balance', formatCurrency(openingBalance), ''],
-            ['(+) Collection',  formatCurrency(collected),     'var(--success)'],
-            ['(+) Other Income',formatCurrency(otherIncome),   'var(--accent)'],
-            ['(-) Expenses',    formatCurrency(spent),         'var(--danger)'],
-            ['Net Balance',     formatCurrency(netBalance),    'var(--primary-light)'],
-          ].map(([label, val, color]) => (
-            <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.6rem 1rem', background: 'var(--bg-elevated)', borderRadius: '8px' }}>
-              <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{label}</span>
-              <strong style={{ color: color || 'var(--text-white)' }}>{val}</strong>
+        <div style={{ marginBottom: '1.75rem' }}>
+          <div className="card-title" style={{ marginBottom: '0.85rem' }}>
+            <Icon name="chart" size={15} /> Financial Summary
+          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', borderRadius: 'var(--r-md)', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
+            <tbody>
+              {prev && (
+                <tr style={{ background: 'rgba(245,158,11,0.06)' }}>
+                  <td style={{ ...pCell, color: 'var(--gold)', fontWeight: 600 }}>
+                    <Icon name="trendUp" size={14} style={{ display:'inline', verticalAlign:'middle', marginRight: 6 }} />
+                    Carry Forward (from {prev.month} {prev.year})
+                  </td>
+                  <td style={{ ...pCell, textAlign:'right', fontWeight:700, color: carryForward >= 0 ? 'var(--gold)' : 'var(--danger)', fontFamily:'var(--font-display)', fontSize:'0.95rem' }}>
+                    {formatCurrency(carryForward)}
+                  </td>
+                </tr>
+              )}
+              <tr>
+                <td style={pCell}><span style={{ color:'var(--success)', marginRight:6, fontWeight:700 }}>+</span> Maintenance Collection</td>
+                <td style={{ ...pCell, textAlign:'right', fontWeight:600, color:'var(--success)', fontFamily:'var(--font-display)' }}>{formatCurrency(collected)}</td>
+              </tr>
+              <tr>
+                <td style={pCell}><span style={{ color:'var(--accent)', marginRight:6, fontWeight:700 }}>+</span> Other Income</td>
+                <td style={{ ...pCell, textAlign:'right', fontWeight:600, color:'var(--accent)', fontFamily:'var(--font-display)' }}>{formatCurrency(otherIncome)}</td>
+              </tr>
+              <tr>
+                <td style={pCell}><span style={{ color:'var(--danger)', marginRight:6, fontWeight:700 }}>−</span> Total Expenses</td>
+                <td style={{ ...pCell, textAlign:'right', fontWeight:600, color:'var(--danger)', fontFamily:'var(--font-display)' }}>{formatCurrency(spent)}</td>
+              </tr>
+              <tr style={{ background:'rgba(59,130,246,0.07)', borderTop:'2px solid var(--border)' }}>
+                <td style={{ ...pCell, fontWeight:800, color:'var(--text-white)', fontSize:'0.96rem' }}>
+                  <Icon name="wallet" size={15} style={{ display:'inline', verticalAlign:'middle', marginRight:6 }} />
+                  Net Balance
+                </td>
+                <td style={{ ...pCell, textAlign:'right', fontWeight:800, color: netBalance >= 0 ? 'var(--primary-light)' : 'var(--danger)', fontSize:'1.1rem', fontFamily:'var(--font-display)' }}>
+                  {formatCurrency(netBalance)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Payment Records */}
+        <div style={{ marginBottom:'1.75rem' }}>
+          <div className="flex-between mb-2">
+            <div className="card-title">
+              <Icon name="wallet" size={15} /> Payment Records
             </div>
-          ))}
-        </div>
-
-        {/* Payments */}
-        <div className="card-title mb-2"><Icon name="wallet" size={16} /> Payment Records</div>
-        <div className="table-scroll" style={{ marginBottom: '1.5rem' }}>
-          <table className="data-table">
-            <thead><tr><th>Flat</th><th>Owner</th><th>Amount</th><th>Date</th><th>Mode</th><th>Status</th></tr></thead>
-            <tbody>
-              {dues.map(d => (
-                <tr key={d.flatNo}>
-                  <td><strong>Flat {d.flatNo}</strong></td>
-                  <td>{d.ownerName}</td>
-                  <td className="rupee">{d.paid ? formatCurrency(d.amountPaid) : '—'}</td>
-                  <td>{d.paymentDate ? new Date(d.paymentDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '—'}</td>
-                  <td>{d.paymentMode || '—'}</td>
-                  <td><span className={`badge ${d.paid ? 'badge-success' : 'badge-danger'}`}>{d.paid ? 'Paid' : 'Pending'}</span></td>
+            <div className="flex gap-1">
+              <span className="badge badge-success">{paid.length} Paid</span>
+              {pending.length > 0 && <span className="badge badge-danger">{pending.length} Pending</span>}
+            </div>
+          </div>
+          <div className="table-scroll">
+            <table style={{ width:'100%', borderCollapse:'collapse', border:'1px solid var(--border-subtle)', borderRadius:'var(--r-md)', overflow:'hidden' }}>
+              <thead>
+                <tr>{['Flat','Owner','Amount','Date','Mode','Status'].map(h => <th key={h} style={pHead}>{h}</th>)}</tr>
+              </thead>
+              <tbody>
+                {dues.map(d => (
+                  <tr key={d.flatNo}>
+                    <td style={{ ...pCell, fontWeight:700 }}>Flat {d.flatNo}</td>
+                    <td style={pCell}>{d.ownerName}</td>
+                    <td style={{ ...pCell, fontFamily:'var(--font-display)', fontWeight:600 }}>{d.paid ? formatCurrency(d.amountPaid) : '—'}</td>
+                    <td style={{ ...pCell, color:'var(--text-muted)' }}>{fmtDate(d.paymentDate)}</td>
+                    <td style={pCell}>{d.paymentMode ? <span className="tag">{d.paymentMode}</span> : '—'}</td>
+                    <td style={pCell}><span className={`badge ${d.paid ? 'badge-success' : 'badge-danger'}`}>{d.paid ? 'Paid' : 'Pending'}</span></td>
+                  </tr>
+                ))}
+                <tr style={{ background:'var(--bg-elevated)', fontWeight:700 }}>
+                  <td colSpan={2} style={{ ...pCell, fontWeight:700 }}>Total Collected</td>
+                  <td style={{ ...pCell, fontFamily:'var(--font-display)', fontWeight:800, color:'var(--success)' }} colSpan={4}>{formatCurrency(collected)}</td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        {/* Expenses */}
-        <div className="card-title mb-2"><Icon name="expense" size={16} /> Expense Records</div>
-        <div className="table-scroll" style={{ marginBottom: '1.5rem' }}>
-          <table className="data-table">
-            <thead><tr><th>Date</th><th>Description</th><th>Bill Amt</th><th>Builder</th><th>Net Expense</th><th>Paid To</th></tr></thead>
-            <tbody>
-              {monthExpenses.map(e => (
-                <tr key={e.id}>
-                  <td>{e.expense_date ? new Date(e.expense_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '—'}</td>
-                  <td>{e.expenseType}</td>
-                  <td className="rupee">{formatCurrency(e.bill_amount)}</td>
-                  <td className="rupee">{e.builder_contribution > 0 ? formatCurrency(e.builder_contribution) : '—'}</td>
-                  <td className="rupee" style={{ color: 'var(--danger)' }}>{formatCurrency(e.netExpense)}</td>
-                  <td>{e.paid_to || '—'}</td>
-                </tr>
-              ))}
-              {monthExpenses.length === 0 && <tr><td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No expense records</td></tr>}
-            </tbody>
-          </table>
+        {/* Expense Records */}
+        <div style={{ marginBottom:'1.75rem' }}>
+          <div className="flex-between mb-2">
+            <div className="card-title">
+              <Icon name="expense" size={15} /> Expense Records
+            </div>
+            <span className="badge badge-muted">{monthExpenses.length} entries</span>
+          </div>
+          {monthExpenses.length === 0 ? (
+            <p style={{ color:'var(--text-muted)', fontSize:'0.85rem', padding:'0.5rem 0' }}>No expense records for this month.</p>
+          ) : (
+            <div className="table-scroll">
+              <table style={{ width:'100%', borderCollapse:'collapse', border:'1px solid var(--border-subtle)', borderRadius:'var(--r-md)', overflow:'hidden' }}>
+                <thead>
+                  <tr>{['Date','Description','Bill Amt','Builder','Net Expense','Paid To'].map(h => <th key={h} style={pHead}>{h}</th>)}</tr>
+                </thead>
+                <tbody>
+                  {monthExpenses.map(e => (
+                    <tr key={e.id}>
+                      <td style={{ ...pCell, color:'var(--text-muted)' }}>{fmtDate(e.expense_date)}</td>
+                      <td style={{ ...pCell, fontWeight:600 }}>{e.expenseType}</td>
+                      <td style={{ ...pCell, fontFamily:'var(--font-display)' }}>{formatCurrency(e.billAmount)}</td>
+                      <td style={{ ...pCell, fontFamily:'var(--font-display)', color:'var(--accent)' }}>{e.builderContribution > 0 ? formatCurrency(e.builderContribution) : '—'}</td>
+                      <td style={{ ...pCell, fontFamily:'var(--font-display)', fontWeight:700, color:'var(--danger)' }}>{formatCurrency(e.netExpense)}</td>
+                      <td style={{ ...pCell, color:'var(--text-muted)' }}>{e.paidTo || '—'}</td>
+                    </tr>
+                  ))}
+                  <tr style={{ background:'var(--bg-elevated)', fontWeight:700 }}>
+                    <td colSpan={4} style={{ ...pCell, fontWeight:700 }}>Total Net Expense</td>
+                    <td style={{ ...pCell, fontFamily:'var(--font-display)', fontWeight:800, color:'var(--danger)' }} colSpan={2}>{formatCurrency(spent)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
-        {/* Footer */}
-        <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
-          <p>{config?.society_name || 'Sri Kuber Apartment'} — Society Maintenance Management System</p>
-          <p>Secretary: Suvadip Panja (Flat 301)</p>
+        {/* Signature Footer */}
+        <div style={{ borderTop:'2px solid var(--border)', paddingTop:'1.25rem' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'3rem', marginBottom:'1rem' }}>
+            <div>
+              <div style={{ fontSize:'0.72rem', color:'var(--text-muted)', marginBottom:'2.5rem', textTransform:'uppercase', letterSpacing:'0.08em' }}>Prepared By</div>
+              <div style={{ borderTop:'1px solid var(--border)', paddingTop:'0.4rem', fontSize:'0.8rem', color:'var(--text-secondary)' }}>
+                Secretary — {societyName}
+              </div>
+            </div>
+            <div style={{ textAlign:'right' }}>
+              <div style={{ fontSize:'0.72rem', color:'var(--text-muted)', marginBottom:'2.5rem', textTransform:'uppercase', letterSpacing:'0.08em' }}>Verified By</div>
+              <div style={{ borderTop:'1px solid var(--border)', paddingTop:'0.4rem', fontSize:'0.8rem', color:'var(--text-secondary)' }}>
+                Date: {generatedOn}
+              </div>
+            </div>
+          </div>
+          <div style={{ textAlign:'center', fontSize:'0.72rem', color:'var(--text-muted)', borderTop:'1px solid var(--border-subtle)', paddingTop:'0.75rem' }}>
+            {societyName} · Society Maintenance Management System · {new Date().getFullYear()}
+          </div>
         </div>
       </div>
     </div>

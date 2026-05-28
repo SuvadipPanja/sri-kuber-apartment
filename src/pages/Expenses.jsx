@@ -2,9 +2,18 @@ import { useState } from 'react';
 import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
 import { formatCurrency, formatDate, MONTHS } from '../utils/formatters';
 import { getMonthExpenses, totalExpenses } from '../utils/calculations';
+import Icon from '../components/Icon';
 
 function mapExpense(e) {
-  return { ...e, expenseType: e.expense_type, billAmount: e.bill_amount, builderContribution: e.builder_contribution, netExpense: e.net_expense, paidTo: e.paid_to };
+  return {
+    ...e,
+    expenseType: e.expense_type,
+    billAmount: e.bill_amount,
+    builderContribution: e.builder_contribution,
+    netExpense: e.net_expense,
+    paidTo: e.paid_to,
+    attachmentUrl: e.attachment_url || null,
+  };
 }
 
 export default function Expenses() {
@@ -12,117 +21,166 @@ export default function Expenses() {
   const { data: rawExpenses, loading } = useSupabaseTable('expenses');
 
   const [selectedMonth, setSelectedMonth] = useState(null);
-  const [selectedYear, setSelectedYear] = useState(null);
+  const [selectedYear,  setSelectedYear]  = useState(null);
+  const [lightboxUrl,   setLightboxUrl]   = useState(null);
 
   const month = selectedMonth ?? config?.current_month ?? 'May';
-  const year = selectedYear ?? config?.current_year ?? 2026;
+  const year  = selectedYear  ?? config?.current_year  ?? 2026;
 
-  const expenses = rawExpenses.map(mapExpense);
+  const expenses      = rawExpenses.map(mapExpense);
   const monthExpenses = getMonthExpenses(expenses, month, year);
-  const total = totalExpenses(expenses, month, year);
-  const totalBill = monthExpenses.reduce((s, e) => s + Number(e.billAmount || 0), 0);
-  const totalBuilder = monthExpenses.reduce((s, e) => s + Number(e.builderContribution || 0), 0);
+  const total         = totalExpenses(expenses, month, year);
+  const totalBill     = monthExpenses.reduce((s, e) => s + Number(e.billAmount || 0), 0);
+  const totalBuilder  = monthExpenses.reduce((s, e) => s + Number(e.builderContribution || 0), 0);
 
   return (
     <div>
       <div className="page-header">
-        <div>
-          <h1>📉 Expenses</h1>
+        <div className="page-header-left">
+          <h1 className="page-title"><Icon name="expense" size={24} /> Expenses</h1>
           <p className="page-subtitle">Society expenditure records</p>
         </div>
         <div className="flex gap-1 items-center">
-          <select className="form-select" style={{ width: 'auto' }} value={month} onChange={e => setSelectedMonth(e.target.value)}>
+          <select className="form-select" style={{ width: 'auto' }} value={month}
+            onChange={e => setSelectedMonth(e.target.value)}>
             <option value="All">All Months</option>
             {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
-          <select className="form-select" style={{ width: 'auto' }} value={year} onChange={e => setSelectedYear(e.target.value === 'All' ? 'All' : Number(e.target.value))}>
+          <select className="form-select" style={{ width: 'auto' }} value={year}
+            onChange={e => setSelectedYear(e.target.value === 'All' ? 'All' : Number(e.target.value))}>
             <option value="All">All Years</option>
             {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
       </div>
 
-      {/* Summary */}
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-        <div className="stat-card red" style={{ flex: 1, minWidth: 160 }}>
-          <div className="stat-icon">🧾</div>
-          <div className="stat-info">
-            <div className="stat-label">Total Bill Amount</div>
-            <div className="stat-value rupee">{formatCurrency(totalBill)}</div>
+      {/* KPI Summary */}
+      <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', marginBottom: '1.5rem' }}>
+        <div className="kpi-card kpi-red">
+          <div className="kpi-top">
+            <div className="kpi-label">Total Bill</div>
+            <div className="kpi-icon"><Icon name="receipt" size={18} /></div>
           </div>
+          <div className="kpi-value rupee">{formatCurrency(totalBill)}</div>
+          <div className="kpi-meta"><span className="kpi-trend flat">Gross amount</span></div>
         </div>
-        <div className="stat-card blue" style={{ flex: 1, minWidth: 160 }}>
-          <div className="stat-icon">🏗️</div>
-          <div className="stat-info">
-            <div className="stat-label">Builder Contribution</div>
-            <div className="stat-value rupee">{formatCurrency(totalBuilder)}</div>
+
+        <div className="kpi-card kpi-accent">
+          <div className="kpi-top">
+            <div className="kpi-label">Builder Paid</div>
+            <div className="kpi-icon"><Icon name="building" size={18} /></div>
           </div>
+          <div className="kpi-value rupee">{formatCurrency(totalBuilder)}</div>
+          <div className="kpi-meta"><span className="kpi-trend up">Contribution</span></div>
         </div>
-        <div className="stat-card red" style={{ flex: 1, minWidth: 160 }}>
-          <div className="stat-icon">💸</div>
-          <div className="stat-info">
-            <div className="stat-label">Net Expense</div>
-            <div className="stat-value rupee">{formatCurrency(total)}</div>
+
+        <div className="kpi-card kpi-red" style={{ '--kpi-color': 'var(--danger)' }}>
+          <div className="kpi-top">
+            <div className="kpi-label">Net Expense</div>
+            <div className="kpi-icon"><Icon name="expense" size={18} /></div>
           </div>
+          <div className="kpi-value rupee">{formatCurrency(total)}</div>
+          <div className="kpi-meta"><span className="kpi-trend down">Paid by society</span></div>
         </div>
-        <div className="stat-card gold" style={{ flex: 1, minWidth: 160 }}>
-          <div className="stat-icon">📋</div>
-          <div className="stat-info">
-            <div className="stat-label">Total Entries</div>
-            <div className="stat-value">{monthExpenses.length}</div>
+
+        <div className="kpi-card kpi-blue">
+          <div className="kpi-top">
+            <div className="kpi-label">Entries</div>
+            <div className="kpi-icon"><Icon name="notice" size={18} /></div>
           </div>
+          <div className="kpi-value">{monthExpenses.length}</div>
+          <div className="kpi-meta"><span className="kpi-trend flat">{month} {year}</span></div>
         </div>
       </div>
 
+      {/* Table */}
       <div className="card">
-        <h3 style={{ marginBottom: '1.25rem', fontSize: '1rem' }}>
-          📋 {month} {year} — Expense Records
-        </h3>
-        {loading ? <div className="flex-center" style={{ padding: '2rem' }}><div className="spinner" /></div> :
-          monthExpenses.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">📭</div>
-              <h3>No Expenses</h3>
-              <p>No expense records for {month} {year}.</p>
+        <div className="card-header">
+          <span className="card-title"><Icon name="receipt" size={16} /> {month} {year} — Expense Records</span>
+          {monthExpenses.some(e => e.attachmentUrl) && (
+            <span className="badge badge-accent">
+              <Icon name="paperclip" size={11} /> {monthExpenses.filter(e => e.attachmentUrl).length} with bills
+            </span>
+          )}
+        </div>
+
+        {loading ? (
+          <div className="flex-center" style={{ padding: '3rem' }}><div className="spinner lg" /></div>
+        ) : monthExpenses.length === 0 ? (
+          <div className="empty-state">
+            <Icon name="expense" size={48} className="empty-state-icon" />
+            <h3>No Expenses</h3>
+            <p>No expense records for {month} {year}.</p>
+          </div>
+        ) : (
+          <div className="table-scroll">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>#</th><th>Date</th><th>Expense Type</th>
+                  <th>Bill Amt</th><th>Builder</th><th>Net Expense</th>
+                  <th>Paid To</th><th>Remarks</th><th>Bill</th>
+                </tr>
+              </thead>
+              <tbody>
+                {monthExpenses.map((e, i) => (
+                  <tr key={e.id}>
+                    <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{i + 1}</td>
+                    <td>{formatDate(e.expense_date)}</td>
+                    <td><strong>{e.expenseType}</strong></td>
+                    <td className="rupee">{formatCurrency(e.billAmount)}</td>
+                    <td className="rupee" style={{ color: 'var(--accent)' }}>
+                      {e.builderContribution > 0 ? formatCurrency(e.builderContribution) : '—'}
+                    </td>
+                    <td className="rupee" style={{ color: 'var(--danger)' }}>
+                      <strong>{formatCurrency(e.netExpense)}</strong>
+                    </td>
+                    <td>{e.paidTo || '—'}</td>
+                    <td style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{e.remarks || '—'}</td>
+                    <td>
+                      {e.attachmentUrl ? (
+                        <button className="attach-existing" onClick={() => setLightboxUrl(e.attachmentUrl)}>
+                          <Icon name="paperclip" size={13} /> View
+                        </button>
+                      ) : (
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>—</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {/* Totals row */}
+                <tr className="table-total-row">
+                  <td colSpan={3}><strong>TOTAL</strong></td>
+                  <td className="rupee"><strong>{formatCurrency(totalBill)}</strong></td>
+                  <td className="rupee"><strong style={{ color: 'var(--accent)' }}>{formatCurrency(totalBuilder)}</strong></td>
+                  <td className="rupee"><strong style={{ color: 'var(--danger)' }}>{formatCurrency(total)}</strong></td>
+                  <td colSpan={3}></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Lightbox */}
+      {lightboxUrl && (
+        <div className="lightbox-overlay" onClick={() => setLightboxUrl(null)}>
+          {lightboxUrl.includes('.pdf') ? (
+            <div style={{ background: 'var(--bg-card)', padding: '2rem', borderRadius: 'var(--r-xl)', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+              <Icon name="paperclip" size={48} style={{ color: 'var(--text-muted)', marginBottom: '1rem' }} />
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>PDF attachment</p>
+              <a href={lightboxUrl} target="_blank" rel="noreferrer" className="btn btn-primary">
+                <Icon name="externalLink" size={16} /> Open PDF
+              </a>
             </div>
           ) : (
-            <div className="table-wrapper">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>#</th><th>Date</th><th>Expense Type</th><th>Bill Amt</th>
-                    <th>Builder</th><th>Net Expense</th><th>Paid To</th><th>Remarks</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {monthExpenses.map((e, i) => (
-                    <tr key={e.id}>
-                      <td style={{ color: 'var(--text-muted)' }}>{i + 1}</td>
-                      <td>{formatDate(e.expense_date)}</td>
-                      <td><strong>{e.expenseType}</strong></td>
-                      <td className="rupee">{formatCurrency(e.billAmount)}</td>
-                      <td className="rupee" style={{ color: 'var(--accent)' }}>
-                        {e.builderContribution > 0 ? formatCurrency(e.builderContribution) : '—'}
-                      </td>
-                      <td className="rupee" style={{ color: 'var(--danger)' }}>
-                        <strong>{formatCurrency(e.netExpense)}</strong>
-                      </td>
-                      <td>{e.paidTo || '—'}</td>
-                      <td style={{ color: 'var(--text-muted)' }}>{e.remarks || '—'}</td>
-                    </tr>
-                  ))}
-                  <tr style={{ background: 'var(--bg-elevated)' }}>
-                    <td colSpan={3}><strong>TOTAL</strong></td>
-                    <td className="rupee"><strong>{formatCurrency(totalBill)}</strong></td>
-                    <td className="rupee"><strong style={{ color: 'var(--accent)' }}>{formatCurrency(totalBuilder)}</strong></td>
-                    <td className="rupee"><strong style={{ color: 'var(--danger)' }}>{formatCurrency(total)}</strong></td>
-                    <td colSpan={2}></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <img src={lightboxUrl} alt="Expense bill" className="lightbox-img" onClick={e => e.stopPropagation()} />
           )}
-      </div>
+          <button className="lightbox-close" onClick={() => setLightboxUrl(null)}>
+            <Icon name="x" size={20} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

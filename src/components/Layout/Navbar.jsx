@@ -9,6 +9,14 @@ export default function Navbar({ collapsed, onMenuToggle }) {
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const [theme, setTheme] = useState(() => localStorage.getItem('ska_theme') || 'dark');
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('ska_theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -34,6 +42,9 @@ export default function Navbar({ collapsed, onMenuToggle }) {
       </div>
 
       <div className="navbar-right">
+        <button className="theme-toggle-btn" onClick={toggleTheme} title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>
+          <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={17} />
+        </button>
         {user && (
           <div className="nav-user-section" ref={dropdownRef}>
             <div className="nav-user-info" style={{ textAlign: 'right', marginRight: '0.75rem' }}>

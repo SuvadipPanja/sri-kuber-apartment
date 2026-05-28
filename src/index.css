@@ -1320,3 +1320,175 @@ code { font-family: var(--font-mono); background: var(--bg-elevated); padding: 0
   opacity: 0.3;
   margin: 0 auto 1rem;
 }
+
+/* ================================================================
+   LIGHT THEME — Clean Professional
+   ================================================================ */
+[data-theme="light"] {
+  --bg-root:        #f0f2f7;
+  --bg-base:        #f5f7fc;
+  --bg-surface:     #ffffff;
+  --bg-card:        #ffffff;
+  --bg-card-hover:  #f8faff;
+  --bg-elevated:    #eef1f8;
+  --bg-input:       #f8faff;
+  --bg-modal:       rgba(245, 247, 252, 0.98);
+  --bg-overlay:     rgba(0, 0, 0, 0.45);
+
+  --text-white:     #0d1117;
+  --text-primary:   #1e2028;
+  --text-secondary: #4b5563;
+  --text-muted:     #9ca3af;
+  --text-inverse:   #ffffff;
+
+  --border-bright:  rgba(59, 130, 246, 0.45);
+  --border:         rgba(0, 0, 0, 0.10);
+  --border-subtle:  rgba(0, 0, 0, 0.06);
+  --border-input:   rgba(0, 0, 0, 0.14);
+
+  --shadow-xs:      0 1px 2px rgba(0,0,0,0.06);
+  --shadow-sm:      0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md:      0 4px 16px rgba(0,0,0,0.10);
+  --shadow-lg:      0 8px 32px rgba(0,0,0,0.12);
+  --shadow-xl:      0 16px 48px rgba(0,0,0,0.14);
+  --shadow-primary: 0 2px 12px rgba(59,130,246,0.20);
+  --shadow-accent:  0 2px 12px rgba(16,185,129,0.20);
+  --shadow-danger:  0 2px 12px rgba(239,68,68,0.20);
+  --shadow-inset:   inset 0 1px 0 rgba(255,255,255,0.9);
+
+  --grad-card:      linear-gradient(145deg, #ffffff 0%, #f8faff 100%);
+  --grad-surface:   linear-gradient(180deg, #ffffff 0%, #f5f7fc 100%);
+  --grad-hero:      linear-gradient(135deg, #f0f2f7 0%, #e8edf8 50%, #f0f2f7 100%);
+}
+
+[data-theme="light"] body { background: var(--bg-root); }
+[data-theme="light"] body::before {
+  background:
+    radial-gradient(ellipse 60% 50% at 10% 0%, rgba(59,130,246,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 90% 100%, rgba(16,185,129,0.04) 0%, transparent 60%);
+}
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); }
+[data-theme="light"] .navbar {
+  background: rgba(255,255,255,0.92);
+  border-bottom-color: rgba(0,0,0,0.08);
+}
+[data-theme="light"] .sidebar { border-right-color: rgba(0,0,0,0.08); }
+[data-theme="light"] .sidebar-brand { background: linear-gradient(180deg, #f0f4ff 0%, #ffffff 100%); }
+[data-theme="light"] .nav-link:hover { background: rgba(59,130,246,0.06); border-left-color: rgba(59,130,246,0.2); }
+[data-theme="light"] .nav-link.active { background: linear-gradient(90deg, rgba(59,130,246,0.12), rgba(59,130,246,0.03)); }
+[data-theme="light"] code { background: #e8edf5; }
+[data-theme="light"] .data-table tbody tr:hover { background: rgba(59,130,246,0.04); }
+[data-theme="light"] .data-table thead { background: linear-gradient(180deg, #eef1f8 0%, #f5f7fc 100%); }
+[data-theme="light"] .data-table thead th { color: #6b7280; }
+[data-theme="light"] .modal-header { background: linear-gradient(180deg, #f0f4ff 0%, transparent 100%); }
+[data-theme="light"] .modal-footer { background: linear-gradient(0deg, #f0f4ff 0%, transparent 100%); }
+[data-theme="light"] .form-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%234b5563' d='M5 7L1 3h8z'/%3E%3C/svg%3E");
+}
+[data-theme="light"] .form-select option { background: #ffffff; color: #1e2028; }
+[data-theme="light"] .loading-screen { background: var(--bg-root); }
+[data-theme="light"] .month-tab-bar { border-color: rgba(0,0,0,0.08); }
+[data-theme="light"] .badge-success { color: #15803d; background: rgba(34,197,94,0.12); border-color: rgba(34,197,94,0.3); }
+[data-theme="light"] .badge-danger  { color: #dc2626; background: rgba(239,68,68,0.10); border-color: rgba(239,68,68,0.25); }
+[data-theme="light"] .badge-warning { color: #d97706; background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.25); }
+[data-theme="light"] .badge-info    { color: #2563eb; background: rgba(59,130,246,0.10); border-color: rgba(59,130,246,0.25); }
+[data-theme="light"] .badge-primary { color: #2563eb; background: rgba(59,130,246,0.10); border-color: rgba(59,130,246,0.25); }
+[data-theme="light"] .badge-accent  { color: #059669; background: rgba(16,185,129,0.10); border-color: rgba(16,185,129,0.25); }
+[data-theme="light"] .badge-muted   { color: #6b7280; background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.10); }
+[data-theme="light"] .badge-gold    { color: #b45309; }
+[data-theme="light"] .badge-admin   { color: #2563eb; }
+[data-theme="light"] .alert-info    { background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.2); color: #1d4ed8; }
+[data-theme="light"] .alert-warning { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.2); color: #92400e; }
+[data-theme="light"] .alert-success { background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.2); color: #15803d; }
+[data-theme="light"] .alert-error   { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.2); color: #b91c1c; }
+[data-theme="light"] .toast { background: #ffffff; border-color: rgba(0,0,0,0.12); color: #1e2028; }
+[data-theme="light"] .kpi-trend.up { color: #16a34a; }
+[data-theme="light"] .kpi-trend.down { color: #dc2626; }
+[data-theme="light"] .text-success-c { color: #16a34a !important; }
+[data-theme="light"] .text-danger-c  { color: #dc2626 !important; }
+[data-theme="light"] .text-muted-c   { color: #9ca3af !important; }
+[data-theme="light"] .text-secondary-c { color: #4b5563 !important; }
+[data-theme="light"] .nav-badge { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.3); }
+[data-theme="light"] .table-total-row td { background: rgba(59,130,246,0.06) !important; }
+[data-theme="light"] .section-divider::before,
+[data-theme="light"] .section-divider::after { background: rgba(0,0,0,0.08); }
+[data-theme="light"] .nav-dropdown { background: #ffffff; border-color: rgba(0,0,0,0.12); }
+[data-theme="light"] .nav-dropdown-item:hover { background: #f0f4ff; color: #1e2028; }
+
+/* ================================================================
+   THEME TOGGLE BUTTON
+   ================================================================ */
+.theme-toggle-btn {
+  width: 38px; height: 38px;
+  border-radius: var(--r-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--t-fast);
+  flex-shrink: 0;
+}
+.theme-toggle-btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+  border-color: var(--border-bright);
+  box-shadow: var(--shadow-primary);
+}
+
+/* ================================================================
+   CARRY FORWARD CARD — Gold accent
+   ================================================================ */
+.kpi-card.kpi-carry {
+  --kpi-color: var(--gold);
+  border-top: 2px solid var(--gold);
+}
+
+/* ================================================================
+   EXPENSE ATTACHMENT STYLES
+   ================================================================ */
+.attach-zone {
+  border: 2px dashed var(--border-input);
+  border-radius: var(--r-md);
+  padding: 1.25rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--t-fast);
+  background: var(--bg-input);
+  position: relative;
+}
+.attach-zone:hover { border-color: var(--primary); background: var(--primary-glow); }
+.attach-zone input[type="file"] {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; cursor: pointer;
+}
+.attach-zone-label {
+  display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+  color: var(--text-muted); font-size: 0.82rem; pointer-events: none;
+}
+.attach-preview {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.65rem 0.9rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+.attach-preview img {
+  width: 48px; height: 48px;
+  object-fit: cover; border-radius: var(--r-sm);
+  border: 1px solid var(--border-subtle);
+}
+.attach-existing {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-size: 0.78rem; color: var(--primary-light);
+  background: var(--primary-glow);
+  border: 1px solid rgba(59,130,246,0.2);
+  border-radius: var(--r-sm);
+  padding: 0.3rem 0.7rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--t-fast);
+}
+.attach-existing:hover { background: rgba(59,130,246,0.15); }
