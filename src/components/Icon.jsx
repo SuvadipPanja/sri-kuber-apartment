@@ -58,6 +58,11 @@ const icons = {
   externalLink: 'M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14',
   arrowRight: 'M17 8l4 4m0 0l-4 4m4-4H3',
   trendUp: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
+  zap: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z',
+  hammer: 'M3.293 15.293a1 1 0 011.414 0l8 8a1 1 0 01-1.414 1.414l-8-8a1 1 0 010-1.414zm16.121-13.121a3 3 0 010 4.243l-9 9-4.243-4.243 9-9a3 3 0 014.243 0z',
+  droplet: 'M12 2.69l5.66 5.66a8 8 0 11-11.31 0z',
+  headphone: 'M3 18v-6a9 9 0 0118 0v6 M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z',
+  contactBook: 'M16 4h2a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2 M8 2h8a1 1 0 011 1v2a1 1 0 01-1 1H8a1 1 0 01-1-1V3a1 1 0 011-1z M12 11a2 2 0 100-4 2 2 0 000 4z M8 17c0-2.2 1.8-4 4-4s4 1.8 4 4',
 };
 
 export default function Icon({ name, size = 20, className = '', color, strokeWidth = 1.5, style = {} }) {

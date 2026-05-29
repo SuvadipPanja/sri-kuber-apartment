@@ -14,8 +14,9 @@ const infoNav = [
   { label: 'Society Info',        icon: 'building',   path: '/society-info' },
   { label: 'Flat Directory',      icon: 'users',      path: '/flat-directory' },
   { label: 'Notice Board',        icon: 'megaphone',  path: '/notice-board' },
-  { label: 'Complaints',          icon: 'complaint',  path: '/complaints' },
-  { label: 'My Account',          icon: 'user',       path: '/my-account' },
+  { label: 'Complaints',          icon: 'complaint',   path: '/complaints' },
+  { label: 'Important Contacts',  icon: 'headphone',  path: '/important-contacts' },
+  { label: 'My Account',          icon: 'user',        path: '/my-account' },
 ];
 const adminReportsNav = [
   { label: 'Statement & Reports', icon: 'printer',    path: '/printable-statement' },
@@ -28,6 +29,7 @@ const adminNav = [
   { label: 'Manage Owners',       icon: 'home',       path: '/admin/owners' },
   { label: 'Manage Notices',      icon: 'notice',     path: '/admin/notices' },
   { label: 'Manage Complaints',   icon: 'complaint',  path: '/admin/complaints' },
+  { label: 'Manage Contacts',    icon: 'headphone',  path: '/admin/contacts' },
   { label: 'Society Settings',    icon: 'settings',   path: '/admin/settings' },
   { label: 'Reset Password',      icon: 'lock',       path: '/admin/reset-password' },
 ];

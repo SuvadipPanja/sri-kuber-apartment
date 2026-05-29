@@ -19,6 +19,7 @@ import NoticeBoard from './pages/NoticeBoard';
 import Complaints from './pages/Complaints';
 import MyAccount from './pages/MyAccount';
 import PrintableStatement from './pages/PrintableStatement';
+import ImportantContacts from './pages/ImportantContacts';
 
 // Admin Pages
 import AdminPanel from './pages/admin/AdminPanel';
@@ -28,6 +29,7 @@ import ManageIncome from './pages/admin/ManageIncome';
 import ManageOwners from './pages/admin/ManageOwners';
 import ManageNotices from './pages/admin/ManageNotices';
 import ManageComplaints from './pages/admin/ManageComplaints';
+import ManageContacts from './pages/admin/ManageContacts';
 import SocietySettings from './pages/admin/SocietySettings';
 import ResetPassword from './pages/admin/ResetPassword';
 
@@ -65,6 +67,7 @@ function AppRoutes() {
         <Route path="flat-directory" element={<FlatDirectory />} />
         <Route path="notice-board" element={<NoticeBoard />} />
         <Route path="complaints" element={<Complaints />} />
+        <Route path="important-contacts" element={<ImportantContacts />} />
         <Route path="my-account" element={<MyAccount />} />
 
         {/* Admin Only Routes */}
@@ -76,6 +79,7 @@ function AppRoutes() {
         <Route path="admin/owners" element={<AdminRoute><ManageOwners /></AdminRoute>} />
         <Route path="admin/notices" element={<AdminRoute><ManageNotices /></AdminRoute>} />
         <Route path="admin/complaints" element={<AdminRoute><ManageComplaints /></AdminRoute>} />
+        <Route path="admin/contacts" element={<AdminRoute><ManageContacts /></AdminRoute>} />
         <Route path="admin/settings" element={<AdminRoute><SocietySettings /></AdminRoute>} />
         <Route path="admin/reset-password" element={<AdminRoute><ResetPassword /></AdminRoute>} />
       </Route>
