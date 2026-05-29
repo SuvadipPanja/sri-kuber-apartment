@@ -119,14 +119,16 @@ function NightCanvas() {
       ctx.fillStyle = sky;
       ctx.fillRect(0, 0, W, H);
 
-      /* Stars */
+      /* ── TASK B: Twinkling stars — opacity + scale pulse (PDF spec) ── */
       stars.forEach(s => {
         s.phase += s.spd;
-        const a = s.base * (0.5 + 0.5 * Math.sin(s.phase));
+        const t     = (Math.sin(s.phase) + 1) / 2;          // 0 → 1
+        const a     = s.base * (0.2 + 0.6 * t);             // opacity 0.2×base → 0.8×base
+        const scale = 0.8 + 0.2 * t;                        // scale 0.8 → 1.0
         ctx.globalAlpha = a;
         ctx.fillStyle   = 'white';
         ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.arc(s.x, s.y, s.r * scale, 0, Math.PI * 2);    // radius scaled
         ctx.fill();
       });
       ctx.globalAlpha = 1;
@@ -149,12 +151,24 @@ function NightCanvas() {
       const ox = (mouseRef.current.x / W - 0.5) * 16;
       const oy = (mouseRef.current.y / H - 0.5) * 8;
 
+      /* ── TASK A: smooth-float — 7s vertical levitation (PDF spec) ──
+         Period 7s @ 60fps → ω = 2π/420 ≈ 0.01497
+         Amplitude: 12px (matches PDF: translateY(-12px))
+         Moon stays at fixed coordinates — float NOT applied there. */
+      const buildFloat = Math.sin(frame * 0.01497) * 12;
+
+      /* ── TASK C: window-glow brightness pulse — 6s alternate (PDF spec) ──
+         Period 6s @ 60fps → ω = 2π/360 ≈ 0.01745
+         Equivalent to CSS brightness(1) → brightness(1.4) alternate:
+         Canvas has no filter per-element; we pulse shadowBlur 3 → 13 instead. */
+      const glowPulse = 3 + 10 * ((Math.sin(frame * 0.01745) + 1) / 2);
+
       /* ── Buildings ── */
       BLDGS.forEach(([xr, hr, wr, tone, acc], bi) => {
         const bx = W * xr  + ox * (0.2 + bi * 0.1);
         const bw = W * wr;
         const bh = H * hr;
-        const by = H - bh  + oy * 0.35;
+        const by = H - bh  + oy * 0.35 + buildFloat;  // ← Task A float applied
 
         /* Body shadow */
         ctx.shadowColor = 'rgba(0,0,0,0.55)';
@@ -205,12 +219,13 @@ function NightCanvas() {
           w.nextFlip = now + Math.random() * 14000 + 4000;
         }
         const dx = ox * (0.2 + w.bi * 0.1);
-        const dy = oy * 0.35;
+        const dy = oy * 0.35 + buildFloat;  // ← Task A float applied to windows
 
         if (w.lit) {
           ctx.save();
-          ctx.shadowColor = w.color; ctx.shadowBlur = 6;
-          ctx.fillStyle   = w.color; ctx.globalAlpha = 0.76;
+          /* Task C: window-glow — glowPulse drives brightness equivalent */
+          ctx.shadowColor = w.color; ctx.shadowBlur = glowPulse;
+          ctx.fillStyle   = w.color; ctx.globalAlpha = 0.7 + 0.15 * ((Math.sin(frame * 0.01745) + 1) / 2);
           rr(ctx, w.bx + dx, w.by + dy, w.w, w.h, 1.5);
           ctx.restore();
         } else {
@@ -433,9 +448,11 @@ export default function Login() {
           flex:0 0 55%; position:relative; z-index:1; overflow:hidden;
           display:flex; align-items:flex-end; justify-content:center;
         }
+        /* QA: will-change for GPU acceleration (PDF checklist) */
         .lp-canvas {
           position:absolute; inset:0; width:100%; height:100%;
           display:block;
+          will-change: transform, opacity;
         }
 
         /* Text overlay at bottom of canvas */
