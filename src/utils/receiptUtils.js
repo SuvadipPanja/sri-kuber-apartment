@@ -183,9 +183,18 @@ export function generateReceipt(payment, config) {
       line-height: 1.4;
     }
     .sig { text-align: center; }
-    .sig-line { border-top: 1.5px solid #111; width: 220px; margin-bottom: 8px; }
-    .sig-lbl  { font-size: 12px; color: #444; }
-    .sig-name { font-size: 13px; font-weight: bold; margin-top: 2px; }
+    .sig-img {
+      display: block;
+      width: 180px;
+      height: auto;
+      margin: 0 auto 4px;
+      mix-blend-mode: multiply;      /* makes white bg transparent on print */
+      filter: contrast(1.15) brightness(0.92);
+      pointer-events: none;
+    }
+    .sig-line { border-top: 1.5px solid #111; width: 220px; margin: 0 auto 8px; }
+    .sig-lbl  { font-size: 13px; font-weight: bold; color: #111; }
+    .sig-sub  { font-size: 11px; color: #555; margin-top: 2px; }
 
     /* ── Foot note ── */
     .footnote {
@@ -262,14 +271,22 @@ export function generateReceipt(payment, config) {
     <div class="footer">
       <div class="stamp">Office<br>Stamp</div>
       <div class="sig">
-        <div class="sig-line"></div>
-        <div class="sig-lbl">Authorised Signatory</div>
-        <div class="sig-name">${societyName}</div>
+        <!-- Signature image — mix-blend-mode:multiply removes white bg on print -->
+        <img
+          src="https://sri-kuber-apartment.vercel.app/signature.png"
+          alt="Signature"
+          class="sig-img"
+          onerror="this.style.display='none'; document.getElementById('sig-fallback').style.display='block';"
+        />
+        <!-- Fallback line if image fails to load -->
+        <div id="sig-fallback" class="sig-line" style="display:none;"></div>
+        <div class="sig-lbl">Suvadip Panja</div>
+        <div class="sig-sub">Secretary, ${societyName}</div>
       </div>
     </div>
 
     <div class="footnote">
-      This is a system-generated receipt &nbsp;|&nbsp; ${societyName} &nbsp;|&nbsp; Valid without physical signature
+      This is a system-generated receipt &nbsp;|&nbsp; ${societyName}
     </div>
   </div>
   <script>window.onload = function () { window.print(); };</script>

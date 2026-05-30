@@ -52,6 +52,11 @@ The workflow to update the live site is entirely Git-driven:
 - **Components:** Custom CSS classes for `.btn`, `.card`, `.badge`, `.form-input`.
 - **Layouts:** `grid-2`, `grid-3`, `.table-scroll`, `.flex-between`.
 
+### Utilities & Receipt Generation (`utils/`)
+- Calculations are centralized in `calculations.js` (including logic for "All" months/years filtering).
+- Receipts are generated using `receiptUtils.js`, which generates an HTML receipt string to print.
+- **Note:** The receipt now dynamically loads a physical signature image (`signature.png`) with `mix-blend-mode: multiply` for a transparent background. Fallback text handles image loading failures.
+
 ## 6. Historical Context & AI Instructions
 - **Aesthetic Overhaul:** The initial design was deemed "AI-generated" due to heavy use of neon purple gradients and emojis. It was overhauled to a Vercel/Linear-inspired "Neutral Dark Slate" palette. Do **not** reintroduce emojis for UI elements; strictly use the `<Icon />` component (`src/components/Icon.jsx`).
 - **Date Filtering:** All financial pages support precise Month/Year filtering as well as "All Months" / "All Years" aggregations, powered by logic in `src/utils/calculations.js`.
