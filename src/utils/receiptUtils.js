@@ -273,7 +273,7 @@ export function generateReceipt(payment, config) {
       <div class="sig">
         <!-- Signature image — mix-blend-mode:multiply removes white bg on print -->
         <img
-          src="https://sri-kuber-apartment.vercel.app/signature.png"
+          src="${window.location.origin}/signature.jpg"
           alt="Signature"
           class="sig-img"
           onerror="this.style.display='none'; document.getElementById('sig-fallback').style.display='block';"
