@@ -265,7 +265,7 @@ export default function Dashboard() {
           <div className="kpi-meta"><span className="kpi-trend flat">Opening: {formatCurrency(openingBalance)}</span></div>
         </div>
 
-        <Link to="/pending-dues" style={{ textDecoration: 'none' }}>
+        <Link to="/monthly-collection" style={{ textDecoration: 'none' }}>
           <div className="kpi-card" style={{ '--kpi-color': stats.pending > 0 ? 'var(--warning)' : 'var(--success)' }}>
             <div className="kpi-top">
               <div className="kpi-label">Pending Dues</div>
@@ -423,7 +423,7 @@ export default function Dashboard() {
       <div className="card">
         <div className="flex-between mb-2">
           <div className="card-title"><Icon name="receipt" size={16} /> {month} {year} — Collection Status</div>
-          <Link to="/pending-dues" className="btn btn-outline btn-sm"><Icon name="clock" size={14} /> View Pending</Link>
+          <Link to="/monthly-collection" className="btn btn-outline btn-sm"><Icon name="clock" size={14} /> View Collection</Link>
         </div>
         <div className="table-scroll">
           <table className="data-table">

@@ -4,9 +4,8 @@ import Icon from '../Icon';
 
 const mainNav = [
   { label: 'Dashboard',           icon: 'dashboard',  path: '/dashboard' },
-  { label: 'Monthly Collection',  icon: 'calendar',   path: '/monthly-collection' },
+  { label: 'Collection & Dues',   icon: 'calendar',   path: '/monthly-collection' },
   { label: 'My Payments',         icon: 'wallet',     path: '/my-payments' },
-  { label: 'Pending Dues',        icon: 'clock',      path: '/pending-dues' },
   { label: 'Expenses',            icon: 'expense',    path: '/expenses' },
   { label: 'Other Income',        icon: 'income',     path: '/other-income' },
 ];

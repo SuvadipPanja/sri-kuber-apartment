@@ -10,7 +10,6 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import MonthlyCollection from './pages/MonthlyCollection';
 import MyPayments from './pages/MyPayments';
-import PendingDues from './pages/PendingDues';
 import Expenses from './pages/Expenses';
 import OtherIncome from './pages/OtherIncome';
 import SocietyInfo from './pages/SocietyInfo';
@@ -59,8 +58,8 @@ function AppRoutes() {
         {/* User Routes */}
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="monthly-collection" element={<MonthlyCollection />} />
+        <Route path="pending-dues" element={<Navigate to="/monthly-collection" replace />} />
         <Route path="my-payments" element={<MyPayments />} />
-        <Route path="pending-dues" element={<PendingDues />} />
         <Route path="expenses" element={<Expenses />} />
         <Route path="other-income" element={<OtherIncome />} />
         <Route path="society-info" element={<SocietyInfo />} />

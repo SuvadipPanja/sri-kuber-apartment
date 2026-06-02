@@ -6,9 +6,9 @@ import { getInitials } from '../../utils/formatters';
 
 const ROUTE_LABELS = {
   dashboard: 'Dashboard',
-  'monthly-collection': 'Monthly Collection',
+  'monthly-collection': 'Collection & Dues',
+  'pending-dues': 'Collection & Dues',
   'my-payments': 'My Payments',
-  'pending-dues': 'Pending Dues',
   expenses: 'Expenses',
   'other-income': 'Other Income',
   'society-info': 'Society Info',
