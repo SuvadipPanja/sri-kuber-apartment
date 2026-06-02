@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
 import { usePeriodFilter } from '../hooks/usePeriodFilter';
 import { useAuth } from '../context/AuthContext';
@@ -142,8 +142,6 @@ export default function Dashboard() {
     { name: 'Pending', value: stats.pending, fill: CHART.pending },
     ...(stats.inactive > 0 ? [{ name: 'Inactive', value: stats.inactive, fill: CHART.inactive }] : []),
   ].filter(d => d.value > 0);
-
-  const pieColors = pieData.map(d => d.fill);
 
   const financialData = [
     { name: 'Expected', amount: expectedCollection, fill: CHART.expected },
@@ -292,49 +290,46 @@ export default function Dashboard() {
             <ChartEmpty message="No active flats for this period" />
           ) : (
             <div className="chart-donut-wrap">
-              <ResponsiveContainer width="100%" height={260}>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={68}
-                    outerRadius={98}
-                    paddingAngle={3}
-                    dataKey="value"
-                    stroke="var(--bg-card)"
-                    strokeWidth={2}
-                    label={({ name, value, percent }) =>
-                      percent >= 0.08 ? `${name} ${value}` : ''
-                    }
-                    labelLine={false}
-                  >
-                    {pieData.map((entry, i) => (
-                      <Cell key={entry.name} fill={pieColors[i]} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<ChartTooltip isCount />} />
-                  <Legend
-                    verticalAlign="bottom"
-                    formatter={(v) => (
-                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', fontWeight: 600 }}>{v}</span>
-                    )}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="chart-donut-center" aria-hidden>
-                <span className="chart-donut-rate">{collectionRate}%</span>
-                <span className="chart-donut-label">Flats paid</span>
+              <div className="chart-donut-chart">
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius="58%"
+                      outerRadius="82%"
+                      paddingAngle={3}
+                      dataKey="value"
+                      stroke="var(--bg-card)"
+                      strokeWidth={2}
+                      isAnimationActive={false}
+                    >
+                      {pieData.map((entry) => (
+                        <Cell key={entry.name} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<ChartTooltip isCount />} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="chart-donut-center" aria-hidden>
+                  <span className="chart-donut-rate">{collectionRate}%</span>
+                  <span className="chart-donut-label">Flats paid</span>
+                </div>
               </div>
+              <ul className="chart-segment-list">
+                {pieData.map((d) => (
+                  <li key={d.name} className="chart-segment-item">
+                    <span className="chart-segment-dot" style={{ background: d.fill }} />
+                    <span className="chart-segment-name">{d.name}</span>
+                    <span className="chart-segment-value">
+                      {d.value} flat{d.value === 1 ? '' : 's'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
-          <div className="chart-legend-row">
-            <span><i style={{ background: CHART.paid }} /> Paid: {stats.paid}</span>
-            <span><i style={{ background: CHART.pending }} /> Pending: {stats.pending}</span>
-            {stats.inactive > 0 && (
-              <span><i style={{ background: CHART.inactive }} /> Inactive: {stats.inactive}</span>
-            )}
-          </div>
         </div>
 
         <div className="card chart-card">

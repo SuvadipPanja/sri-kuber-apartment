@@ -169,6 +169,22 @@
     min-width: 520px;
   }
 
+  .chart-donut-chart {
+    height: 170px;
+  }
+
+  .chart-donut-chart .recharts-responsive-container {
+    height: 170px !important;
+  }
+
+  .chart-donut-rate {
+    font-size: 1.35rem;
+  }
+
+  .chart-summary-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
   /* Photo upload row */
   .card .flex.gap-2 {
     flex-wrap: wrap;

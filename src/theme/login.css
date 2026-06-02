@@ -514,6 +514,10 @@
 @media (max-width: 768px) {
   .login-page {
     padding-bottom: env(safe-area-inset-bottom, 0px);
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .login-aurora,
@@ -583,14 +587,14 @@
   }
 
   .login-panel {
-    align-items: flex-start;
+    align-items: stretch;
     justify-content: flex-start;
+    flex: 1;
+    min-height: min-content;
     padding: 1rem
       max(1rem, env(safe-area-inset-right, 0px))
-      calc(1.25rem + env(safe-area-inset-bottom, 0px))
+      calc(1.5rem + env(safe-area-inset-bottom, 0px))
       max(1rem, env(safe-area-inset-left, 0px));
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
   }
 
   .login-card {

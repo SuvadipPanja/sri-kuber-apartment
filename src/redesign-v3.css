@@ -689,24 +689,76 @@ body {
   .badge { font-size: 0.68rem; }
   .data-table { min-width: 480px; font-size: 0.78rem; }
   .card-title { font-size: 0.75rem; }
-  .chart-donut-wrap { min-height: 220px; }
+  .chart-donut-chart {
+    max-width: 100%;
+    height: 180px;
+  }
+  .chart-donut-chart .recharts-responsive-container {
+    height: 180px !important;
+  }
   .chart-donut-rate { font-size: 1.5rem; }
+  .chart-segment-list {
+    gap: 0.4rem;
+  }
 }
 
 /* —— Dashboard charts —— */
-.chart-card { overflow: visible; }
+.chart-card { overflow: hidden; }
 .chart-donut-wrap {
+  min-height: 0;
+  padding-bottom: 0.25rem;
+}
+.chart-donut-chart {
   position: relative;
-  min-height: 260px;
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto;
+  height: 200px;
+}
+.chart-donut-chart .recharts-responsive-container {
+  width: 100% !important;
+  height: 200px !important;
 }
 .chart-donut-center {
   position: absolute;
-  top: 42%;
+  top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
   pointer-events: none;
   line-height: 1.1;
+  z-index: 1;
+}
+.chart-segment-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.75rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-top: 1px solid var(--border-subtle);
+}
+.chart-segment-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+}
+.chart-segment-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.chart-segment-name {
+  flex: 1;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.chart-segment-value {
+  font-weight: 700;
+  color: var(--text-white);
+  font-variant-numeric: tabular-nums;
 }
 .chart-donut-rate {
   display: block;
