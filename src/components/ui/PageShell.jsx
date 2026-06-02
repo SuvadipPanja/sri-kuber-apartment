@@ -3,9 +3,9 @@ import Icon from '../Icon';
 /**
  * Unified page header for redesign v3
  */
-export default function PageShell({ icon, title, subtitle, actions, children, className = '' }) {
+export default function PageShell({ icon, title, subtitle, actions, children, className = '', compact = false }) {
   return (
-    <div className={className}>
+    <div className={`${className}${compact ? ' page-shell-compact' : ''}`}>
       <header className="page-hero">
         <div className="page-hero-inner">
           <div className="page-hero-main">

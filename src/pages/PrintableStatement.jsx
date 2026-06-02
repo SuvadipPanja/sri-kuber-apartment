@@ -67,20 +67,26 @@ export default function PrintableStatement() {
   const handlePrint = () => window.print();
 
   const handleWhatsAppShare = async () => {
+    if (!reportRef.current) {
+      addToast('Report not ready — please wait a moment', 'error');
+      return;
+    }
     setSharing(true);
     try {
       const result = await shareReportAsImage(reportRef.current, {
         title: shareTitle,
         filename: `Monthly-Report-${month}-${year}.png`,
       });
+      if (result.method === 'cancelled') return;
       addToast(
         result.method === 'share'
-          ? 'Report shared — select WhatsApp from the share menu'
-          : 'Report image downloaded — attach it in WhatsApp',
+          ? 'Select WhatsApp in the share menu to send the report image'
+          : 'Report image downloaded — attach it in the WhatsApp chat that opened',
         'success'
       );
     } catch (err) {
-      addToast(err.message || 'Could not share report image', 'error');
+      console.error('WhatsApp share failed:', err);
+      addToast(err.message || 'Could not share report — try Print/PDF instead', 'error');
     } finally {
       setSharing(false);
     }

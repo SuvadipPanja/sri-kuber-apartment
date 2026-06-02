@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts';
 import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
 import { usePeriodFilter } from '../hooks/usePeriodFilter';
@@ -75,9 +76,34 @@ export default function Dashboard() {
   const { data: rawPayments, loading: paymentsLoading } = useSupabaseTable('payments');
   const { data: rawExpenses, loading: expensesLoading } = useSupabaseTable('expenses');
   const { data: rawIncome } = useSupabaseTable('income');
-  const { data: notices } = useSupabaseTable('notices', q => q.order('created_at', { ascending: false }).limit(5));
+  const { data: notices } = useSupabaseTable('notices', q => q.order('created_at', { ascending: false }).limit(1));
 
   const { month, year, setMonth: setSelectedMonth, setYear: setSelectedYear } = usePeriodFilter();
+
+  const [dismissedNoticeId, setDismissedNoticeId] = useState(
+    () => sessionStorage.getItem('ska_dismissed_notice') || ''
+  );
+
+  // Re-show banner when admin publishes a new notice (new id)
+  const latestNotice = (() => {
+    const now = new Date();
+    return notices.find(n => !n.expires_at || new Date(n.expires_at) > now) || null;
+  })();
+
+  useEffect(() => {
+    if (latestNotice && dismissedNoticeId && dismissedNoticeId !== latestNotice.id) {
+      setDismissedNoticeId('');
+      sessionStorage.removeItem('ska_dismissed_notice');
+    }
+  }, [latestNotice?.id, dismissedNoticeId]);
+
+  const showNoticeBanner = latestNotice && dismissedNoticeId !== latestNotice.id;
+
+  const dismissNotice = () => {
+    if (!latestNotice) return;
+    sessionStorage.setItem('ska_dismissed_notice', latestNotice.id);
+    setDismissedNoticeId(latestNotice.id);
+  };
 
   const owners   = rawOwners.map(mapOwner);
   const payments = rawPayments.map(mapPayment);
@@ -104,9 +130,6 @@ export default function Dashboard() {
   const dues        = buildPendingDues(owners, payments, month, year);
 
   const isLoading = configLoading || ownersLoading || paymentsLoading || expensesLoading;
-
-  const now = new Date();
-  const activeNotices = notices.filter(n => !n.expires_at || new Date(n.expires_at) > now);
 
   const expectedCollection = owners
     .filter(o => o.active)
@@ -139,54 +162,44 @@ export default function Dashboard() {
 
   return (
     <PageShell
+      compact
       icon="dashboard"
       title="Dashboard"
-      subtitle={`Monthly summary for ${month} ${year}`}
+      subtitle={user ? `${getTimeGreeting()}, ${getFirstName(user.ownerName)} · ${month} ${year}` : `Monthly summary for ${month} ${year}`}
       actions={
-        <MonthYearFilter
-          month={month}
-          year={year}
-          onMonthChange={setSelectedMonth}
-          onYearChange={setSelectedYear}
-        />
+        <>
+          {user && <span className="dashboard-flat-chip">Flat {user.flatNo}</span>}
+          <MonthYearFilter
+            month={month}
+            year={year}
+            onMonthChange={setSelectedMonth}
+            onYearChange={setSelectedYear}
+          />
+        </>
       }
     >
-      {/* Welcome greeting */}
-      {user && (
-        <div className="dashboard-welcome">
-          <div className="dashboard-welcome-text">
-            <span className="dashboard-welcome-greeting">
-              {getTimeGreeting()}, {getFirstName(user.ownerName)} 👋
-            </span>
-            <span className="dashboard-welcome-sub">
-              Here&apos;s your society overview for {month} {year}
-            </span>
+      {/* Latest notice — dismissible; new notice id re-shows banner */}
+      {showNoticeBanner && (
+        <div className={`dashboard-notice-bar priority-${latestNotice.priority || 'normal'}`}>
+          <Icon name="megaphone" size={14} />
+          <div className="dashboard-notice-body">
+            <strong>{latestNotice.title}</strong>
+            <span>{latestNotice.content.length > 100 ? `${latestNotice.content.slice(0, 100)}…` : latestNotice.content}</span>
           </div>
-          <div className="dashboard-welcome-flat">Flat {user.flatNo}</div>
+          <button type="button" className="dashboard-notice-close" onClick={dismissNotice} aria-label="Dismiss notice">
+            <Icon name="x" size={14} />
+          </button>
         </div>
       )}
-
-      {/* Active Notices */}
-      {activeNotices.slice(0, 2).map(n => (
-        <div key={n.id} className="alert alert-info mb-1" style={{ borderLeft: n.priority === 'urgent' ? '3px solid var(--danger)' : n.priority === 'important' ? '3px solid var(--warning)' : '3px solid var(--primary)' }}>
-          <Icon name="megaphone" size={16} />
-          <div>
-            <strong>{n.title}</strong>
-            <span className="text-sm text-secondary-c" style={{ marginLeft: '0.75rem' }}>
-              {n.content.length > 120 ? n.content.substring(0, 120) + '…' : n.content}
-            </span>
-          </div>
-        </div>
-      ))}
-      {config?.announcement && !activeNotices.length && (
-        <div className="alert alert-info">
-          <Icon name="megaphone" size={16} />
-          <div>{config.announcement}</div>
+      {!showNoticeBanner && config?.announcement && !latestNotice && (
+        <div className="dashboard-notice-bar priority-normal">
+          <Icon name="megaphone" size={14} />
+          <div className="dashboard-notice-body"><span>{config.announcement}</span></div>
         </div>
       )}
 
       {/* KPI Cards */}
-      <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))' }}>
+      <div className="kpi-grid dashboard-kpi-grid">
 
         {/* Carry Forward */}
         {month !== 'All' && year !== 'All' && prev && (
