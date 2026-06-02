@@ -1,5 +1,6 @@
 import { useAuth } from '../context/AuthContext';
-import { useSupabaseTable } from '../hooks/useSupabase';
+import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
+import { useToast } from '../context/ToastContext';
 import { usePeriodFilter } from '../hooks/usePeriodFilter';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { getFlatPayments } from '../utils/calculations';
@@ -21,7 +22,9 @@ function mapPayment(p) {
 }
 
 export default function MyPayments() {
-  const { user }    = useAuth();
+  const { user } = useAuth();
+  const { addToast } = useToast();
+  const { config } = useConfig();
   const { data: rawPayments, loading } = useSupabaseTable('payments');
   const { month: selectedMonth, year: selectedYear, setMonth: setSelectedMonth, setYear: setSelectedYear } = usePeriodFilter();
 
@@ -34,6 +37,17 @@ export default function MyPayments() {
   if (selectedYear  !== 'All') myPayments = myPayments.filter(p => p.year === Number(selectedYear));
 
   const filteredTotal = myPayments.reduce((s, p) => s + Number(p.amountPaid || 0), 0);
+
+  const handleReceipt = (payment) => {
+    const result = generateReceipt(payment, config);
+    if (!result.success) {
+      addToast(result.message || 'Could not generate receipt.', 'error');
+      return;
+    }
+    if (result.mode === 'download') {
+      addToast(result.message || 'Receipt downloaded.', 'success');
+    }
+  };
 
   return (
     <PageShell
@@ -122,9 +136,10 @@ export default function MyPayments() {
                     </td>
                     <td>
                       <button
+                        type="button"
                         className="btn btn-ghost"
-                        style={{ padding: '0.3rem 0.8rem', fontSize: '0.78rem', gap: '0.35rem', display: 'inline-flex', alignItems: 'center' }}
-                        onClick={() => generateReceipt(p, config)}
+                        style={{ padding: '0.3rem 0.8rem', fontSize: '0.78rem', gap: '0.35rem', display: 'inline-flex', alignItems: 'center', minHeight: '36px' }}
+                        onClick={() => handleReceipt(p)}
                         title="Download / Print Receipt"
                       >
                         <Icon name="download" size={13} /> Receipt
