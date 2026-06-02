@@ -87,17 +87,27 @@ export default function Login() {
   return (
     <div className="login-page">
       <aside className="login-brand" aria-label="Sri Kuber Apartment">
-        <div className="login-brand-inner">
-          <div className="login-logo" aria-hidden="true">
+        <div className="login-aurora" aria-hidden="true">
+          <span className="login-orb login-orb-1" />
+          <span className="login-orb login-orb-2" />
+          <span className="login-orb login-orb-3" />
+        </div>
+
+        <div className="login-brand-inner login-anim-fade-up">
+          <div className="login-logo login-anim-logo">
             <img src="/favicon.svg" alt="" width="30" height="30" />
           </div>
-          <h1 className="login-title">
+          <h1 className="login-title login-anim-fade-up" style={{ animationDelay: '0.08s' }}>
             Sri Kuber <em>Apartment</em>
           </h1>
-          <p className="login-tagline">
-            Maintenance, collections, notices, and society records — one secure portal for every resident.
+          <p
+            className="login-tagline login-anim-fade-up"
+            style={{ animationDelay: '0.16s' }}
+          >
+            Maintenance, collections, notices, and society records — one secure portal for every
+            resident.
           </p>
-          <div className="login-stats">
+          <div className="login-stats login-anim-fade-up" style={{ animationDelay: '0.24s' }}>
             <div className="login-stat">
               <strong>24/7</strong>
               <span>Access</span>
@@ -111,10 +121,10 @@ export default function Login() {
       </aside>
 
       <main className="login-panel">
-        <div className="login-card">
+        <div className="login-card login-anim-card">
           <div className="login-card-accent" aria-hidden="true" />
           <div className="login-card-body">
-            <div className="login-card-header">
+            <div className="login-card-header login-anim-fade-up" style={{ animationDelay: '0.12s' }}>
               <div>
                 <h2>Sign in</h2>
                 <p className="login-sub">Flat number and society password</p>
@@ -130,16 +140,11 @@ export default function Login() {
               </button>
             </div>
 
-            <p className="login-hint">
-              <Icon name="info" size={16} />
-              <span>
-                First time signing in? Your default password is usually your{' '}
-                <strong>flat number</strong> (e.g. 301). You can set a stronger password later in My Account.
-              </span>
-            </p>
-
             <form className="login-form" onSubmit={handleSubmit} noValidate>
-              <div className="form-group">
+              <div
+                className="form-group login-anim-fade-up"
+                style={{ animationDelay: '0.2s' }}
+              >
                 <label className="form-label" htmlFor="flatNo">
                   Flat number
                 </label>
@@ -159,7 +164,10 @@ export default function Login() {
                 />
               </div>
 
-              <div className="form-group">
+              <div
+                className="form-group login-anim-fade-up"
+                style={{ animationDelay: '0.28s' }}
+              >
                 <label className="form-label" htmlFor="password">
                   Password
                 </label>
@@ -168,7 +176,7 @@ export default function Login() {
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     className="form-input"
-                    placeholder="e.g. your flat number"
+                    placeholder="Enter password"
                     value={password}
                     onChange={(e) => {
                       setPassword(e.target.value);
@@ -189,13 +197,19 @@ export default function Login() {
               </div>
 
               {error && (
-                <div className="alert alert-error" role="alert">
+                <div className="alert alert-error login-anim-shake" role="alert">
                   <Icon name="warning" size={14} />
                   <span>{error}</span>
                 </div>
               )}
 
-              <button type="submit" className="btn btn-primary" disabled={loading} id="login-btn">
+              <button
+                type="submit"
+                className="btn btn-primary login-btn-submit login-anim-fade-up"
+                style={{ animationDelay: '0.36s' }}
+                disabled={loading}
+                id="login-btn"
+              >
                 {loading ? (
                   <>
                     <span className="spinner sm" />
@@ -211,7 +225,7 @@ export default function Login() {
             </form>
           </div>
 
-          <p className="login-footer">
+          <p className="login-footer login-anim-fade-up" style={{ animationDelay: '0.44s' }}>
             Developed by <strong>Suvadip Panja</strong>
           </p>
         </div>
