@@ -1,15 +1,59 @@
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts';
 import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
 import { usePeriodFilter } from '../hooks/usePeriodFilter';
-import { formatCurrency, MONTHS } from '../utils/formatters';
+import { formatCurrency } from '../utils/formatters';
 import { totalCollection, totalExpenses, totalOtherIncome, calculateNetBalance, getFlatStats, buildPendingDues } from '../utils/calculations';
 import { Link } from 'react-router-dom';
 import Icon from '../components/Icon';
 import PageShell from '../components/ui/PageShell';
 import MonthYearFilter from '../components/ui/MonthYearFilter';
 
-const CHART_COLORS = ['#22c55e', '#ef4444', '#6b7280'];
+const CHART = {
+  paid:     '#22c55e',
+  pending:  '#f43f5e',
+  inactive: '#64748b',
+  expected: '#6366f1',
+  collected:'#22c55e',
+  due:      '#f59e0b',
+  expense:  '#f43f5e',
+  netPos:   '#14b8a6',
+  netNeg:   '#fb7185',
+  opening:  '#eab308',
+};
+
 const MONTHS_ORDER = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function formatCompactCurrency(value) {
+  const n = Number(value) || 0;
+  const abs = Math.abs(n);
+  const sign = n < 0 ? '-' : '';
+  if (abs >= 10000000) return `${sign}₹${(abs / 10000000).toFixed(1)}Cr`;
+  if (abs >= 100000) return `${sign}₹${(abs / 100000).toFixed(1)}L`;
+  if (abs >= 1000) return `${sign}₹${(abs / 1000).toFixed(1)}K`;
+  return `${sign}₹${abs}`;
+}
+
+function ChartTooltip({ active, payload, label, isCount }) {
+  if (!active || !payload?.length) return null;
+  const item = payload[0];
+  const name = label || item.payload?.name || item.name;
+  const val = item.value ?? item.payload?.amount ?? 0;
+  return (
+    <div className="chart-tooltip">
+      <div className="chart-tooltip-label">{name}</div>
+      <div className="chart-tooltip-value">{isCount ? `${val} flats` : formatCurrency(val)}</div>
+    </div>
+  );
+}
+
+function ChartEmpty({ message }) {
+  return (
+    <div className="chart-empty">
+      <Icon name="chart" size={32} />
+      <p>{message}</p>
+    </div>
+  );
+}
 
 function getPrevMonthYear(month, year) {
   if (month === 'All' || year === 'All') return null;
@@ -61,19 +105,27 @@ export default function Dashboard() {
   const now = new Date();
   const activeNotices = notices.filter(n => !n.expires_at || new Date(n.expires_at) > now);
 
+  const expectedCollection = owners
+    .filter(o => o.active)
+    .reduce((sum, o) => sum + (month === 'All' ? o.monthlyCharge * 12 : o.monthlyCharge), 0);
+  const pendingAmount = Math.max(0, expectedCollection - collected);
+  const collectionRate = stats.active > 0 ? Math.round((stats.paid / stats.active) * 100) : 0;
+
   const pieData = [
-    { name: 'Paid',     value: stats.paid },
-    { name: 'Pending',  value: stats.pending },
-    { name: 'Inactive', value: stats.inactive },
+    { name: 'Paid', value: stats.paid, fill: CHART.paid },
+    { name: 'Pending', value: stats.pending, fill: CHART.pending },
+    ...(stats.inactive > 0 ? [{ name: 'Inactive', value: stats.inactive, fill: CHART.inactive }] : []),
   ].filter(d => d.value > 0);
 
-  const barData = [
-    { name: 'Carry Fwd', amount: openingBalance,            fill: 'var(--gold)' },
-    { name: 'Collected', amount: collected,                 fill: 'var(--success)' },
-    { name: 'Other Inc', amount: otherIncome,               fill: 'var(--accent)' },
-    { name: 'Expenses',  amount: spent,                     fill: 'var(--danger)' },
-    { name: 'Net Bal',   amount: Math.max(0, netBalance),   fill: 'var(--primary-light)' },
-  ].filter(d => d.amount > 0);
+  const pieColors = pieData.map(d => d.fill);
+
+  const financialData = [
+    { name: 'Expected', amount: expectedCollection, fill: CHART.expected },
+    { name: 'Collected', amount: collected, fill: CHART.collected },
+    { name: 'Pending', amount: pendingAmount, fill: CHART.due },
+    { name: 'Expenses', amount: spent, fill: CHART.expense },
+    { name: 'Net Balance', amount: netBalance, fill: netBalance >= 0 ? CHART.netPos : CHART.netNeg },
+  ];
 
   if (isLoading) return (
     <div className="loading-screen">
@@ -200,41 +252,119 @@ export default function Dashboard() {
 
       {/* Charts */}
       <div className="charts-grid">
-        <div className="card">
+        <div className="card chart-card">
           <div className="card-header">
-            <span className="card-title"><Icon name="chart" size={16} /> Collection Status</span>
-            <span className="badge badge-muted">{month} {year}</span>
+            <span className="card-title"><Icon name="chart" size={16} /> Flat Payment Status</span>
+            <span className="badge badge-muted">{stats.paid}/{stats.active} paid</span>
           </div>
-          <ResponsiveContainer width="100%" height={220}>
-            <PieChart>
-              <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={85} paddingAngle={4} dataKey="value" stroke="var(--bg-card)" strokeWidth={2}>
-                {pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i]} />)}
-              </Pie>
-              <Tooltip contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text-white)' }} itemStyle={{ color: 'var(--text-white)' }} />
-              <Legend formatter={(v) => <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600 }}>{v}</span>} />
-            </PieChart>
-          </ResponsiveContainer>
+          {pieData.length === 0 ? (
+            <ChartEmpty message="No active flats for this period" />
+          ) : (
+            <div className="chart-donut-wrap">
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={68}
+                    outerRadius={98}
+                    paddingAngle={3}
+                    dataKey="value"
+                    stroke="var(--bg-card)"
+                    strokeWidth={2}
+                    label={({ name, value, percent }) =>
+                      percent >= 0.08 ? `${name} ${value}` : ''
+                    }
+                    labelLine={false}
+                  >
+                    {pieData.map((entry, i) => (
+                      <Cell key={entry.name} fill={pieColors[i]} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<ChartTooltip isCount />} />
+                  <Legend
+                    verticalAlign="bottom"
+                    formatter={(v) => (
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', fontWeight: 600 }}>{v}</span>
+                    )}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="chart-donut-center" aria-hidden>
+                <span className="chart-donut-rate">{collectionRate}%</span>
+                <span className="chart-donut-label">Flats paid</span>
+              </div>
+            </div>
+          )}
+          <div className="chart-legend-row">
+            <span><i style={{ background: CHART.paid }} /> Paid: {stats.paid}</span>
+            <span><i style={{ background: CHART.pending }} /> Pending: {stats.pending}</span>
+            {stats.inactive > 0 && (
+              <span><i style={{ background: CHART.inactive }} /> Inactive: {stats.inactive}</span>
+            )}
+          </div>
         </div>
 
-        <div className="card">
+        <div className="card chart-card">
           <div className="card-header">
-            <span className="card-title"><Icon name="chart" size={16} /> Financial Summary</span>
-            <span className="badge badge-muted">{month} {year}</span>
+            <span className="card-title"><Icon name="money" size={16} /> Money Flow — {month} {year}</span>
+            <span className="badge badge-muted">{formatCurrency(netBalance)} net</span>
           </div>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={barData} barSize={28} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <XAxis dataKey="name" tick={{ fill: 'var(--text-secondary)', fontSize: 10, fontWeight: 600 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `₹${v}`} />
-              <Tooltip
-                contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8 }}
-                formatter={(v) => [formatCurrency(v), 'Amount']}
-                cursor={{ fill: 'rgba(255,255,255,0.02)' }}
-              />
-              <Bar dataKey="amount" radius={[6, 6, 0, 0]}>
-                {barData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          {financialData.every(d => d.amount === 0) ? (
+            <ChartEmpty message="No financial data for this period" />
+          ) : (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart
+                data={financialData}
+                layout="vertical"
+                margin={{ top: 4, right: 16, left: 4, bottom: 4 }}
+                barCategoryGap="18%"
+              >
+                <XAxis
+                  type="number"
+                  domain={['auto', 'auto']}
+                  tick={{ fill: '#94a3b8', fontSize: 10 }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={formatCompactCurrency}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  width={88}
+                  tick={{ fill: '#cbd5e1', fontSize: 11, fontWeight: 600 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <ReferenceLine x={0} stroke="rgba(255,255,255,0.15)" />
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(99,102,241,0.08)' }} />
+                <Bar dataKey="amount" radius={[0, 6, 6, 0]} barSize={26}>
+                  {financialData.map((entry) => (
+                    <Cell key={entry.name} fill={entry.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+          <div className="chart-summary-row">
+            <div className="chart-summary-item">
+              <span className="chart-summary-label">Opening</span>
+              <span className="chart-summary-value rupee">{formatCurrency(openingBalance)}</span>
+            </div>
+            {otherIncome > 0 && (
+              <div className="chart-summary-item">
+                <span className="chart-summary-label">Other income</span>
+                <span className="chart-summary-value rupee">{formatCurrency(otherIncome)}</span>
+              </div>
+            )}
+            <div className="chart-summary-item">
+              <span className="chart-summary-label">Collection gap</span>
+              <span className="chart-summary-value rupee" style={{ color: pendingAmount > 0 ? CHART.due : CHART.paid }}>
+                {formatCurrency(pendingAmount)}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 

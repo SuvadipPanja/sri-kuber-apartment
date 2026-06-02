@@ -598,4 +598,115 @@ body {
   .badge { font-size: 0.68rem; }
   .data-table { min-width: 480px; font-size: 0.78rem; }
   .card-title { font-size: 0.75rem; }
+  .chart-donut-wrap { min-height: 220px; }
+  .chart-donut-rate { font-size: 1.5rem; }
+}
+
+/* —— Dashboard charts —— */
+.chart-card { overflow: visible; }
+.chart-donut-wrap {
+  position: relative;
+  min-height: 260px;
+}
+.chart-donut-center {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  line-height: 1.1;
+}
+.chart-donut-rate {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-white);
+  font-family: var(--font-display);
+}
+.chart-donut-label {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 0.15rem;
+}
+.chart-legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  padding-top: 0.5rem;
+  margin-top: 0.25rem;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.chart-legend-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.chart-legend-row i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.chart-summary-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-subtle);
+}
+.chart-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.chart-summary-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.chart-summary-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-white);
+}
+.chart-tooltip {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 0.55rem 0.75rem;
+  box-shadow: var(--shadow-md);
+}
+.chart-tooltip-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: 0.15rem;
+}
+.chart-tooltip-value {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-white);
+}
+.chart-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 220px;
+  color: var(--text-muted);
+  text-align: center;
+}
+.chart-empty p {
+  font-size: 0.85rem;
+  max-width: 22ch;
 }
