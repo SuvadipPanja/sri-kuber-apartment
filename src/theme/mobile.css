@@ -170,11 +170,11 @@
   }
 
   .chart-donut-chart {
-    height: 170px;
+    height: 132px;
   }
 
-  .chart-donut-chart .recharts-responsive-container {
-    height: 170px !important;
+  .chart-bar-wrap {
+    height: 168px;
   }
 
   .chart-donut-rate {

@@ -291,7 +291,7 @@ export default function Dashboard() {
           ) : (
             <div className="chart-donut-wrap">
               <div className="chart-donut-chart">
-                <ResponsiveContainer width="100%" height={200}>
+                <ResponsiveContainer width="100%" height="100%">
                   <PieChart margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
                     <Pie
                       data={pieData}
@@ -340,17 +340,18 @@ export default function Dashboard() {
           {financialData.every(d => d.amount === 0) ? (
             <ChartEmpty message="No financial data for this period" />
           ) : (
-            <ResponsiveContainer width="100%" height={280}>
+            <div className="chart-bar-wrap">
+              <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={financialData}
                 layout="vertical"
-                margin={{ top: 4, right: 16, left: 4, bottom: 4 }}
-                barCategoryGap="18%"
+                margin={{ top: 2, right: 12, left: 0, bottom: 2 }}
+                barCategoryGap="22%"
               >
                 <XAxis
                   type="number"
                   domain={['auto', 'auto']}
-                  tick={{ fill: '#94a3b8', fontSize: 10 }}
+                  tick={{ fill: '#94a3b8', fontSize: 9 }}
                   axisLine={false}
                   tickLine={false}
                   tickFormatter={formatCompactCurrency}
@@ -358,20 +359,21 @@ export default function Dashboard() {
                 <YAxis
                   type="category"
                   dataKey="name"
-                  width={88}
-                  tick={{ fill: '#cbd5e1', fontSize: 11, fontWeight: 600 }}
+                  width={76}
+                  tick={{ fill: '#cbd5e1', fontSize: 10, fontWeight: 600 }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <ReferenceLine x={0} stroke="rgba(255,255,255,0.15)" />
                 <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(99,102,241,0.08)' }} />
-                <Bar dataKey="amount" radius={[0, 6, 6, 0]} barSize={26}>
+                <Bar dataKey="amount" radius={[0, 5, 5, 0]} barSize={18}>
                   {financialData.map((entry) => (
                     <Cell key={entry.name} fill={entry.fill} />
                   ))}
                 </Bar>
               </BarChart>
-            </ResponsiveContainer>
+              </ResponsiveContainer>
+            </div>
           )}
           <div className="chart-summary-row">
             <div className="chart-summary-item">

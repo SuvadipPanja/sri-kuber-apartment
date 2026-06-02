@@ -690,34 +690,48 @@ body {
   .data-table { min-width: 480px; font-size: 0.78rem; }
   .card-title { font-size: 0.75rem; }
   .chart-donut-chart {
-    max-width: 100%;
-    height: 180px;
+    max-width: 220px;
+    height: 140px;
   }
-  .chart-donut-chart .recharts-responsive-container {
-    height: 180px !important;
+  .chart-bar-wrap {
+    height: 175px;
   }
-  .chart-donut-rate { font-size: 1.5rem; }
+  .chart-donut-rate { font-size: 1.3rem; }
   .chart-segment-list {
-    gap: 0.4rem;
+    gap: 0.3rem 0.5rem;
   }
 }
 
 /* —— Dashboard charts —— */
-.chart-card { overflow: hidden; }
+.chart-card {
+  overflow: hidden;
+}
+.chart-card .card-header {
+  margin-bottom: 0.35rem;
+  padding-bottom: 0;
+}
 .chart-donut-wrap {
   min-height: 0;
-  padding-bottom: 0.25rem;
+  padding-bottom: 0;
 }
 .chart-donut-chart {
   position: relative;
   width: 100%;
-  max-width: 280px;
+  max-width: 240px;
   margin: 0 auto;
-  height: 200px;
+  height: 148px;
 }
 .chart-donut-chart .recharts-responsive-container {
   width: 100% !important;
-  height: 200px !important;
+  height: 100% !important;
+}
+.chart-bar-wrap {
+  width: 100%;
+  height: 192px;
+}
+.chart-bar-wrap .recharts-responsive-container {
+  width: 100% !important;
+  height: 100% !important;
 }
 .chart-donut-center {
   position: absolute;
@@ -732,17 +746,17 @@ body {
 .chart-segment-list {
   list-style: none;
   margin: 0;
-  padding: 0.75rem 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  padding: 0.5rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.35rem 0.65rem;
   border-top: 1px solid var(--border-subtle);
 }
 .chart-segment-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8125rem;
+  gap: 0.4rem;
+  font-size: 0.78rem;
 }
 .chart-segment-dot {
   width: 10px;
@@ -762,18 +776,18 @@ body {
 }
 .chart-donut-rate {
   display: block;
-  font-size: 1.75rem;
+  font-size: 1.45rem;
   font-weight: 800;
   color: var(--text-white);
   font-family: var(--font-display);
 }
 .chart-donut-label {
   display: block;
-  font-size: 0.72rem;
+  font-size: 0.65rem;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  margin-top: 0.15rem;
+  margin-top: 0.1rem;
 }
 .chart-legend-row {
   display: flex;
@@ -799,10 +813,10 @@ body {
 }
 .chart-summary-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 0.75rem;
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.5rem 0.75rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
   border-top: 1px solid var(--border-subtle);
 }
 .chart-summary-item {
@@ -818,7 +832,7 @@ body {
   font-weight: 600;
 }
 .chart-summary-value {
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--text-white);
 }
@@ -844,8 +858,8 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  min-height: 220px;
+  gap: 0.5rem;
+  min-height: 160px;
   color: var(--text-muted);
   text-align: center;
 }
