@@ -22,12 +22,14 @@ const ROUTE_LABELS = {
 };
 
 export default function Navbar({ collapsed, onMenuToggle }) {
-  const { user, logout } = useAuth();
+  const { user, logout, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const pathParts = location.pathname.split('/').filter(Boolean);
   const pageKey = pathParts[pathParts.length - 1] || 'dashboard';
-  const pageLabel = ROUTE_LABELS[pageKey] || pageKey.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  const pageLabel =
+    ROUTE_LABELS[pageKey] ||
+    pageKey.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const [theme, setTheme] = useState(() => localStorage.getItem('ska_theme') || 'dark');
@@ -37,7 +39,7 @@ export default function Navbar({ collapsed, onMenuToggle }) {
     localStorage.setItem('ska_theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
+  const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -55,65 +57,115 @@ export default function Navbar({ collapsed, onMenuToggle }) {
   };
 
   return (
-    <nav className={`navbar ${collapsed ? 'collapsed' : ''}`}>
+    <header className={`navbar ${collapsed ? 'collapsed' : ''}`}>
       <div className="navbar-left">
-        <button type="button" className="btn-icon nav-menu-btn" onClick={onMenuToggle} aria-label="Open menu">
+        <button
+          type="button"
+          className="btn-icon nav-menu-btn"
+          onClick={onMenuToggle}
+          aria-label="Open menu"
+        >
           <Icon name="menu" size={20} />
         </button>
         <nav className="breadcrumb" aria-label="Breadcrumb">
-          <span>Sri Kuber</span>
-          <span className="breadcrumb-sep">/</span>
+          <span className="breadcrumb-root">Sri Kuber</span>
+          <Icon name="chevronRight" size={12} className="breadcrumb-icon" aria-hidden />
           <span className="breadcrumb-current">{pageLabel}</span>
         </nav>
       </div>
 
       <div className="navbar-right">
-        <button className="theme-toggle-btn" onClick={toggleTheme} title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>
+        <button
+          type="button"
+          className="theme-toggle-btn"
+          onClick={toggleTheme}
+          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
           <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={17} />
         </button>
+
         {user && (
-          <div className="nav-user-section" ref={dropdownRef}>
-            <div className="nav-user-info" style={{ textAlign: 'right', marginRight: '0.75rem' }}>
-              <div className="nav-user-name">{user.ownerName}</div>
-              <div className="nav-user-role">
-                Flat {user.flatNo}
-                {user.role === 'superadmin' && (
-                  <span className="nav-badge admin" style={{ marginLeft: '0.5rem' }}>
-                    <Icon name="crown" size={10} /> Admin
+          <>
+            <span className="navbar-divider" aria-hidden />
+            <div className="nav-user-section" ref={dropdownRef}>
+              <button
+                type="button"
+                className={`nav-user-trigger${dropdownOpen ? ' is-open' : ''}`}
+                onClick={() => setDropdownOpen((p) => !p)}
+                aria-expanded={dropdownOpen}
+                aria-haspopup="menu"
+                id="nav-user-menu-btn"
+              >
+                <div className="nav-user-meta">
+                  <span className="nav-user-name">{user.ownerName}</span>
+                  <span className="nav-user-details">
+                    <span className="nav-user-flat">Flat {user.flatNo}</span>
+                    {isSuperAdmin() && (
+                      <span className="nav-badge admin">
+                        <Icon name="crown" size={10} aria-hidden />
+                        Admin
+                      </span>
+                    )}
                   </span>
-                )}
-              </div>
-            </div>
+                </div>
+                <span className="nav-avatar" aria-hidden>
+                  {user.photoUrl ? (
+                    <img src={user.photoUrl} alt="" />
+                  ) : (
+                    getInitials(user.ownerName)
+                  )}
+                </span>
+                <Icon
+                  name="chevronDown"
+                  size={14}
+                  className={`nav-user-chevron${dropdownOpen ? ' is-open' : ''}`}
+                  aria-hidden
+                />
+              </button>
 
-            <button
-              className="nav-avatar"
-              onClick={() => setDropdownOpen(p => !p)}
-              style={{ cursor: 'pointer', border: dropdownOpen ? '2px solid var(--primary)' : '2px solid var(--border)', padding: user.photoUrl ? 0 : undefined }}
-            >
-              {user.photoUrl ? (
-                <img src={user.photoUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
-              ) : (
-                getInitials(user.ownerName)
+              {dropdownOpen && (
+                <div className="nav-dropdown slide-up" role="menu" aria-labelledby="nav-user-menu-btn">
+                  <div className="nav-dropdown-header">
+                    <span className="nav-dropdown-name">{user.ownerName}</span>
+                    <span className="nav-dropdown-flat">Flat {user.flatNo}</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="nav-dropdown-item"
+                    role="menuitem"
+                    onClick={() => {
+                      navigate('/my-account');
+                      setDropdownOpen(false);
+                    }}
+                  >
+                    <Icon name="user" size={16} /> My Account
+                  </button>
+                  <button
+                    type="button"
+                    className="nav-dropdown-item"
+                    role="menuitem"
+                    onClick={() => {
+                      navigate('/complaints');
+                      setDropdownOpen(false);
+                    }}
+                  >
+                    <Icon name="complaint" size={16} /> My Complaints
+                  </button>
+                  <hr className="nav-dropdown-sep" />
+                  <button
+                    type="button"
+                    className="nav-dropdown-item text-danger-c"
+                    role="menuitem"
+                    onClick={handleLogout}
+                  >
+                    <Icon name="logout" size={16} /> Sign Out
+                  </button>
+                </div>
               )}
-            </button>
-
-            {dropdownOpen && (
-              <div className="nav-dropdown slide-up">
-                <button className="nav-dropdown-item" onClick={() => { navigate('/my-account'); setDropdownOpen(false); }}>
-                  <Icon name="user" size={16} /> My Account
-                </button>
-                <button className="nav-dropdown-item" onClick={() => { navigate('/complaints'); setDropdownOpen(false); }}>
-                  <Icon name="complaint" size={16} /> My Complaints
-                </button>
-                <hr style={{ border: 'none', borderTop: '1px solid var(--border-subtle)', margin: '0.25rem 0' }} />
-                <button className="nav-dropdown-item text-danger-c" onClick={handleLogout}>
-                  <Icon name="logout" size={16} /> Sign Out
-                </button>
-              </div>
-            )}
-          </div>
+            </div>
+          </>
         )}
       </div>
-    </nav>
+    </header>
   );
 }

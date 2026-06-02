@@ -1312,7 +1312,9 @@ code { font-family: var(--font-mono); background: var(--bg-elevated); padding: 0
 
 @media (max-width: 768px) {
   .nav-menu-btn { display: flex !important; }
-  .nav-user-info { display: none; }
+  .nav-user-meta,
+  .nav-user-chevron { display: none; }
+  .nav-user-trigger { padding: 0.2rem; }
   .grid-2 { grid-template-columns: 1fr !important; }
 }
 
