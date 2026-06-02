@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from './Sidebar';
@@ -10,6 +10,10 @@ export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
 
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
   if (!user) return <Navigate to="/login" replace />;
 
   return (
@@ -17,8 +21,9 @@ export default function AppLayout() {
       {/* Mobile backdrop */}
       {mobileOpen && (
         <div
-          style={{ position: 'fixed', inset: 0, background: 'var(--bg-overlay)', zIndex: 940, backdropFilter: 'blur(4px)' }}
+          className="mobile-backdrop"
           onClick={() => setMobileOpen(false)}
+          aria-hidden
         />
       )}
 

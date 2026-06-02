@@ -8,13 +8,13 @@ export default function PageShell({ icon, title, subtitle, actions, children, cl
     <div className={className}>
       <header className="page-hero">
         <div className="page-hero-inner">
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', flex: 1, minWidth: 0 }}>
+          <div className="page-hero-main">
             {icon && (
               <div className="page-hero-icon" aria-hidden>
                 <Icon name={icon} size={26} />
               </div>
             )}
-            <div>
+            <div className="page-hero-text">
               <h1>{title}</h1>
               {subtitle && <p className="page-hero-sub">{subtitle}</p>}
             </div>
