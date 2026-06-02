@@ -1,7 +1,9 @@
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts';
 import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
 import { usePeriodFilter } from '../hooks/usePeriodFilter';
+import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '../utils/formatters';
+import { getFirstName, getTimeGreeting } from '../utils/greetings';
 import { totalCollection, totalExpenses, totalOtherIncome, calculateNetBalance, getFlatStats, buildPendingDues } from '../utils/calculations';
 import { Link } from 'react-router-dom';
 import Icon from '../components/Icon';
@@ -67,6 +69,7 @@ function mapExpense(e) { return { ...e, expenseType: e.expense_type, billAmount:
 function mapOwner(o)   { return { ...o, flatNo: o.flat_no, ownerName: o.owner_name, monthlyCharge: o.monthly_charge }; }
 
 export default function Dashboard() {
+  const { user } = useAuth();
   const { config, loading: configLoading } = useConfig();
   const { data: rawOwners, loading: ownersLoading } = useSupabaseTable('owners');
   const { data: rawPayments, loading: paymentsLoading } = useSupabaseTable('payments');
@@ -148,6 +151,21 @@ export default function Dashboard() {
         />
       }
     >
+      {/* Welcome greeting */}
+      {user && (
+        <div className="dashboard-welcome">
+          <div className="dashboard-welcome-text">
+            <span className="dashboard-welcome-greeting">
+              {getTimeGreeting()}, {getFirstName(user.ownerName)} 👋
+            </span>
+            <span className="dashboard-welcome-sub">
+              Here&apos;s your society overview for {month} {year}
+            </span>
+          </div>
+          <div className="dashboard-welcome-flat">Flat {user.flatNo}</div>
+        </div>
+      )}
+
       {/* Active Notices */}
       {activeNotices.slice(0, 2).map(n => (
         <div key={n.id} className="alert alert-info mb-1" style={{ borderLeft: n.priority === 'urgent' ? '3px solid var(--danger)' : n.priority === 'important' ? '3px solid var(--warning)' : '3px solid var(--primary)' }}>

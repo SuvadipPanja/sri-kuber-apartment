@@ -710,3 +710,42 @@ body {
   font-size: 0.85rem;
   max-width: 22ch;
 }
+
+/* —— Dashboard welcome —— */
+.dashboard-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.25rem;
+  border-radius: var(--r-xl);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(20, 184, 166, 0.08));
+  border: 1px solid var(--border-bright);
+}
+.dashboard-welcome-greeting {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-white);
+  letter-spacing: -0.02em;
+}
+.dashboard-welcome-sub {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+.dashboard-welcome-flat {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--primary-light);
+  background: var(--primary-glow);
+  border: 1px solid var(--border-bright);
+  border-radius: var(--r-full);
+  padding: 0.35rem 0.85rem;
+  white-space: nowrap;
+}
+[data-theme="light"] .dashboard-welcome-greeting { color: var(--text-white); }
