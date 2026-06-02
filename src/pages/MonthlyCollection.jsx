@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
-import { formatCurrency, MONTHS } from '../utils/formatters';
+import { formatCurrency } from '../utils/formatters';
 import { totalCollection, buildPendingDues } from '../utils/calculations';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import Icon from '../components/Icon';
+import PageShell from '../components/ui/PageShell';
+import MonthYearFilter from '../components/ui/MonthYearFilter';
 
 function mapPayment(p) { return { ...p, flatNo: p.flat_no, ownerName: p.owner_name, amountPaid: p.amount_paid, paymentDate: p.payment_date, paymentMode: p.payment_mode }; }
 function mapOwner(o)   { return { ...o, flatNo: o.flat_no, ownerName: o.owner_name, monthlyCharge: o.monthly_charge }; }
@@ -36,24 +38,19 @@ export default function MonthlyCollection() {
   ];
 
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-header-left">
-          <h1 className="page-title"><Icon name="calendar" size={24} /> Monthly Collection</h1>
-          <p className="page-subtitle">Track maintenance collection for specific periods</p>
-        </div>
-        <div className="flex gap-1 items-center">
-          <select className="form-select" style={{ width: 'auto' }} value={month} onChange={e => setSelectedMonth(e.target.value)}>
-            <option value="All">All Months</option>
-            {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-          <select className="form-select" style={{ width: 'auto' }} value={year} onChange={e => setSelectedYear(e.target.value === 'All' ? 'All' : Number(e.target.value))}>
-            <option value="All">All Years</option>
-            {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
-        </div>
-      </div>
-
+    <PageShell
+      icon="calendar"
+      title="Monthly Collection"
+      subtitle="Track maintenance collection for specific periods"
+      actions={
+        <MonthYearFilter
+          month={month}
+          year={year}
+          onMonthChange={setSelectedMonth}
+          onYearChange={setSelectedYear}
+        />
+      }
+    >
       <div className="grid-2 mb-3">
         <div className="card">
           <h3 className="chart-title">Collection Overview</h3>
@@ -115,6 +112,6 @@ export default function MonthlyCollection() {
           </div>
         }
       </div>
-    </div>
+    </PageShell>
   );
 }

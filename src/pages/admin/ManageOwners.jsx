@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext';
 import { getInitials } from '../../utils/formatters';
 import { uploadProfilePhoto } from '../../utils/uploadPhoto';
 import Icon from '../../components/Icon';
+import PageShell from '../../components/ui/PageShell';
 
 const EMPTY = { flatNo: '', ownerName: '', phone: '', email: '', monthlyCharge: 500, active: true, notes: '', photoUrl: '' };
 
@@ -69,14 +70,11 @@ export default function ManageOwners() {
   };
 
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-header-left">
-          <h1 className="page-title"><Icon name="home" size={24} /> Manage Owners</h1>
-          <p className="page-subtitle">Edit flat owner details, contact info, and status</p>
-        </div>
-      </div>
-
+    <PageShell
+      icon="home"
+      title="Manage Owners"
+      subtitle="Edit flat owner details, contact info, and status"
+    >
       {loading ? <div className="flex-center" style={{ height: '40vh' }}><div className="spinner lg" /></div> : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
           {owners.map(o => (
@@ -186,6 +184,6 @@ export default function ManageOwners() {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

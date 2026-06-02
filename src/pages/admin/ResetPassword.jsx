@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { supabase } from '../../services/supabase';
 import { useSupabaseTable } from '../../hooks/useSupabase';
 import { useToast } from '../../context/ToastContext';
+import PageShell from '../../components/ui/PageShell';
 
 export default function ResetPassword() {
   const { addToast } = useToast();
@@ -55,11 +56,11 @@ export default function ResetPassword() {
   const owner = owners.find(o => o.flat_no === selectedFlat);
 
   return (
-    <div>
-      <div className="page-header">
-        <div><h1>🔐 Reset Password</h1><p className="page-subtitle">Reset password for any flat owner</p></div>
-      </div>
-
+    <PageShell
+      icon="lock"
+      title="Reset Password"
+      subtitle="Reset password for any flat owner"
+    >
       <div style={{ maxWidth: 520 }}>
         <div className="alert alert-warning" style={{ marginBottom: '1.5rem' }}>
           ⚠️ This will immediately change the flat owner's login password. The owner will need to use the new password on their next login.
@@ -117,6 +118,6 @@ export default function ResetPassword() {
           </ul>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

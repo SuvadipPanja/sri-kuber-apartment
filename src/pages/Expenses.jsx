@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
-import { formatCurrency, formatDate, MONTHS } from '../utils/formatters';
+import { formatCurrency, formatDate } from '../utils/formatters';
 import { getMonthExpenses, totalExpenses } from '../utils/calculations';
 import Icon from '../components/Icon';
+import PageShell from '../components/ui/PageShell';
+import MonthYearFilter from '../components/ui/MonthYearFilter';
+import EmptyState from '../components/ui/EmptyState';
 
 function mapExpense(e) {
   return {
@@ -34,26 +37,19 @@ export default function Expenses() {
   const totalBuilder  = monthExpenses.reduce((s, e) => s + Number(e.builderContribution || 0), 0);
 
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-header-left">
-          <h1 className="page-title"><Icon name="expense" size={24} /> Expenses</h1>
-          <p className="page-subtitle">Society expenditure records</p>
-        </div>
-        <div className="flex gap-1 items-center">
-          <select className="form-select" style={{ width: 'auto' }} value={month}
-            onChange={e => setSelectedMonth(e.target.value)}>
-            <option value="All">All Months</option>
-            {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-          <select className="form-select" style={{ width: 'auto' }} value={year}
-            onChange={e => setSelectedYear(e.target.value === 'All' ? 'All' : Number(e.target.value))}>
-            <option value="All">All Years</option>
-            {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
-        </div>
-      </div>
-
+    <PageShell
+      icon="expense"
+      title="Expenses"
+      subtitle="Society expenditure records"
+      actions={
+        <MonthYearFilter
+          month={month}
+          year={year}
+          onMonthChange={setSelectedMonth}
+          onYearChange={setSelectedYear}
+        />
+      }
+    >
       {/* KPI Summary */}
       <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', marginBottom: '1.5rem' }}>
         <div className="kpi-card kpi-red">
@@ -107,11 +103,11 @@ export default function Expenses() {
         {loading ? (
           <div className="flex-center" style={{ padding: '3rem' }}><div className="spinner lg" /></div>
         ) : monthExpenses.length === 0 ? (
-          <div className="empty-state">
-            <Icon name="expense" size={48} className="empty-state-icon" />
-            <h3>No Expenses</h3>
-            <p>No expense records for {month} {year}.</p>
-          </div>
+          <EmptyState
+            icon="expense"
+            title="No Expenses"
+            description={`No expense records for ${month} ${year}.`}
+          />
         ) : (
           <div className="table-scroll">
             <table className="data-table">
@@ -181,6 +177,6 @@ export default function Expenses() {
           </button>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

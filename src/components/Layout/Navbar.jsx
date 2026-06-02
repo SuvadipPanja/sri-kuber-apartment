@@ -1,12 +1,33 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Icon from '../Icon';
 import { getInitials } from '../../utils/formatters';
 
+const ROUTE_LABELS = {
+  dashboard: 'Dashboard',
+  'monthly-collection': 'Monthly Collection',
+  'my-payments': 'My Payments',
+  'pending-dues': 'Pending Dues',
+  expenses: 'Expenses',
+  'other-income': 'Other Income',
+  'society-info': 'Society Info',
+  'flat-directory': 'Flat Directory',
+  'notice-board': 'Notice Board',
+  complaints: 'Complaints',
+  'important-contacts': 'Important Contacts',
+  'my-account': 'My Account',
+  'printable-statement': 'Statement & Reports',
+  admin: 'Admin Panel',
+};
+
 export default function Navbar({ collapsed, onMenuToggle }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const pathParts = location.pathname.split('/').filter(Boolean);
+  const pageKey = pathParts[pathParts.length - 1] || 'dashboard';
+  const pageLabel = ROUTE_LABELS[pageKey] || pageKey.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const [theme, setTheme] = useState(() => localStorage.getItem('ska_theme') || 'dark');
@@ -36,9 +57,14 @@ export default function Navbar({ collapsed, onMenuToggle }) {
   return (
     <nav className={`navbar ${collapsed ? 'collapsed' : ''}`}>
       <div className="navbar-left">
-        <button className="btn-icon nav-menu-btn" onClick={onMenuToggle}>
+        <button type="button" className="btn-icon nav-menu-btn" onClick={onMenuToggle} aria-label="Open menu">
           <Icon name="menu" size={20} />
         </button>
+        <nav className="breadcrumb" aria-label="Breadcrumb">
+          <span>Sri Kuber</span>
+          <span className="breadcrumb-sep">/</span>
+          <span className="breadcrumb-current">{pageLabel}</span>
+        </nav>
       </div>
 
       <div className="navbar-right">

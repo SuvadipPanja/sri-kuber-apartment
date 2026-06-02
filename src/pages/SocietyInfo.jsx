@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useConfig } from '../hooks/useSupabase';
+import PageShell from '../components/ui/PageShell';
 
 export default function SocietyInfo() {
   const { config, loading } = useConfig();
@@ -13,14 +14,11 @@ export default function SocietyInfo() {
   ];
 
   return (
-    <div>
-      <div className="page-header">
-        <div>
-          <h1>🏠 Society Info</h1>
-          <p className="page-subtitle">About Sri Kuber Apartment</p>
-        </div>
-      </div>
-
+    <PageShell
+      icon="building"
+      title="Society Info"
+      subtitle="About Sri Kuber Apartment"
+    >
       <div className="grid-2 mb-3">
         {photos.map((photo, i) => (
           <div key={i} className="gallery-item" style={{ height: '300px', borderRadius: 'var(--r-xl)' }} onClick={() => setLightbox(photo.src)}>
@@ -84,6 +82,6 @@ export default function SocietyInfo() {
           )}
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

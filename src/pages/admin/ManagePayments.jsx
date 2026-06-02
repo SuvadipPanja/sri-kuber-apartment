@@ -3,6 +3,8 @@ import { supabase } from '../../services/supabase';
 import { useSupabaseTable, useConfig } from '../../hooks/useSupabase';
 import { useToast } from '../../context/ToastContext';
 import { formatCurrency, formatDate, MONTHS, PAYMENT_MODES, generateId } from '../../utils/formatters';
+import PageShell from '../../components/ui/PageShell';
+import MonthYearFilter from '../../components/ui/MonthYearFilter';
 
 function mapPayment(p) { return { ...p, flatNo: p.flat_no, ownerName: p.owner_name, amountPaid: p.amount_paid, paymentDate: p.payment_date, paymentMode: p.payment_mode }; }
 
@@ -75,23 +77,24 @@ export default function ManagePayments() {
   };
 
   return (
-    <div>
-      <div className="page-header">
-        <div>
-          <h1>💰 Manage Payments</h1>
-          <p className="page-subtitle">Add, edit, or delete maintenance payments</p>
-        </div>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <select className="form-select" style={{ width: 'auto', padding: '0.5rem 2rem 0.5rem 0.75rem' }} value={month} onChange={e => setFilterMonth(e.target.value)} id="payments-month-filter">
-            {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-          <select className="form-select" style={{ width: 'auto', padding: '0.5rem 2rem 0.5rem 0.75rem' }} value={year} onChange={e => setFilterYear(Number(e.target.value))} id="payments-year-filter">
-            {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
+    <PageShell
+      icon="money"
+      title="Manage Payments"
+      subtitle="Add, edit, or delete maintenance payments"
+      actions={
+        <>
+          <MonthYearFilter
+            month={month}
+            year={year}
+            onMonthChange={setFilterMonth}
+            onYearChange={setFilterYear}
+            showAllMonths={false}
+            showAllYears={false}
+          />
           <button className="btn btn-primary" onClick={openAdd} id="add-payment-btn">➕ Add Payment</button>
-        </div>
-      </div>
-
+        </>
+      }
+    >
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
           <h3 style={{ fontSize: '1rem' }}>{month} {year} — {filtered.length} records</h3>
@@ -190,6 +193,6 @@ export default function ManagePayments() {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

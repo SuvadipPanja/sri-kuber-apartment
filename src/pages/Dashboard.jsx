@@ -5,6 +5,8 @@ import { formatCurrency, MONTHS } from '../utils/formatters';
 import { totalCollection, totalExpenses, totalOtherIncome, calculateNetBalance, getFlatStats, buildPendingDues } from '../utils/calculations';
 import { Link } from 'react-router-dom';
 import Icon from '../components/Icon';
+import PageShell from '../components/ui/PageShell';
+import MonthYearFilter from '../components/ui/MonthYearFilter';
 
 const CHART_COLORS = ['#22c55e', '#ef4444', '#6b7280'];
 const MONTHS_ORDER = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -87,25 +89,19 @@ export default function Dashboard() {
   );
 
   return (
-    <div>
-      {/* Header */}
-      <div className="page-header">
-        <div className="page-header-left">
-          <h1 className="page-title"><Icon name="dashboard" size={24} /> Dashboard</h1>
-          <p className="page-subtitle">Monthly summary for {month} {year}</p>
-        </div>
-        <div className="flex gap-1 items-center flex-wrap">
-          <select className="form-select" style={{ width: 'auto' }} value={month} onChange={e => setSelectedMonth(e.target.value)}>
-            <option value="All">All Months</option>
-            {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-          <select className="form-select" style={{ width: 'auto' }} value={year} onChange={e => setSelectedYear(e.target.value === 'All' ? 'All' : Number(e.target.value))}>
-            <option value="All">All Years</option>
-            {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
-        </div>
-      </div>
-
+    <PageShell
+      icon="dashboard"
+      title="Dashboard"
+      subtitle={`Monthly summary for ${month} ${year}`}
+      actions={
+        <MonthYearFilter
+          month={month}
+          year={year}
+          onMonthChange={setSelectedMonth}
+          onYearChange={setSelectedYear}
+        />
+      }
+    >
       {/* Active Notices */}
       {activeNotices.slice(0, 2).map(n => (
         <div key={n.id} className="alert alert-info mb-1" style={{ borderLeft: n.priority === 'urgent' ? '3px solid var(--danger)' : n.priority === 'important' ? '3px solid var(--warning)' : '3px solid var(--primary)' }}>
@@ -306,6 +302,6 @@ export default function Dashboard() {
           </table>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

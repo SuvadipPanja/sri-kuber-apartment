@@ -4,6 +4,7 @@ import { useSupabaseTable } from '../../hooks/useSupabase';
 import { useToast } from '../../context/ToastContext';
 import { formatDate } from '../../utils/formatters';
 import Icon from '../../components/Icon';
+import PageShell from '../../components/ui/PageShell';
 
 const STATUS_BADGE = { open: 'badge-danger', in_progress: 'badge-warning', resolved: 'badge-success' };
 const STATUS_LABEL = { open: 'Open', in_progress: 'In Progress', resolved: 'Resolved' };
@@ -54,19 +55,18 @@ export default function ManageComplaints() {
   };
 
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-header-left">
-          <h1 className="page-title"><Icon name="complaint" size={24} /> Manage Complaints</h1>
-          <p className="page-subtitle">View and respond to resident complaints</p>
-        </div>
+    <PageShell
+      icon="complaint"
+      title="Manage Complaints"
+      subtitle="View and respond to resident complaints"
+      actions={
         <div className="flex gap-1">
           <span className="badge badge-danger">{complaints.filter(c => c.status === 'open').length} Open</span>
           <span className="badge badge-warning">{complaints.filter(c => c.status === 'in_progress').length} In Progress</span>
           <span className="badge badge-success">{complaints.filter(c => c.status === 'resolved').length} Resolved</span>
         </div>
-      </div>
-
+      }
+    >
       <div className="month-tab-bar mb-3" style={{ maxWidth: 500 }}>
         {['all', 'open', 'in_progress', 'resolved'].map(s => (
           <button key={s} className={`month-tab ${filterStatus === s ? 'active' : ''}`} onClick={() => setFilterStatus(s)}>
@@ -146,6 +146,6 @@ export default function ManageComplaints() {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

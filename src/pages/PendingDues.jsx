@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
-import { formatCurrency, formatDate, MONTHS } from '../utils/formatters';
+import { formatCurrency, formatDate } from '../utils/formatters';
 import { buildPendingDues, getFlatStats } from '../utils/calculations';
 import Icon from '../components/Icon';
+import PageShell from '../components/ui/PageShell';
+import MonthYearFilter from '../components/ui/MonthYearFilter';
+import EmptyState from '../components/ui/EmptyState';
 
 function mapPayment(p) {
   return { ...p, flatNo: p.flat_no, ownerName: p.owner_name, amountPaid: p.amount_paid, paymentDate: p.payment_date, paymentMode: p.payment_mode };
@@ -46,25 +49,21 @@ export default function PendingDues() {
   }
 
   return (
-    <div>
-      {/* ── Header ── */}
-      <div className="page-header">
-        <div className="page-header-left">
-          <h1 className="page-title"><Icon name="clock" size={24} /> Pending Dues</h1>
-          <p className="page-subtitle">Maintenance collection status — {month} {year}</p>
-        </div>
-        <div className="flex gap-1 items-center">
-          <select className="form-select" style={{ width: 'auto' }} value={month}
-            onChange={e => setSelectedMonth(e.target.value)}>
-            {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-          <select className="form-select" style={{ width: 'auto' }} value={year}
-            onChange={e => setSelectedYear(Number(e.target.value))}>
-            {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
-        </div>
-      </div>
-
+    <PageShell
+      icon="clock"
+      title="Pending Dues"
+      subtitle={`Maintenance collection status — ${month} ${year}`}
+      actions={
+        <MonthYearFilter
+          month={month}
+          year={year}
+          onMonthChange={setSelectedMonth}
+          onYearChange={setSelectedYear}
+          showAllMonths={false}
+          showAllYears={false}
+        />
+      }
+    >
       {/* ── KPI Cards ── */}
       <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', marginBottom: '1.5rem' }}>
         <div className="kpi-card kpi-red">
@@ -224,11 +223,11 @@ export default function PendingDues() {
         {loading ? (
           <div className="flex-center" style={{ padding: '3rem' }}><div className="spinner lg" /></div>
         ) : displayDues.length === 0 ? (
-          <div className="empty-state">
-            <Icon name="check" size={48} className="empty-state-icon" />
-            <h3>All Clear!</h3>
-            <p>No {view === 'pending' ? 'pending' : ''} records for {month} {year}.</p>
-          </div>
+          <EmptyState
+            icon="check"
+            title="All Clear!"
+            description={`No ${view === 'pending' ? 'pending' : ''} records for ${month} ${year}.`}
+          />
         ) : (
           <div className="table-scroll">
             <table className="data-table">
@@ -297,6 +296,6 @@ export default function PendingDues() {
           </div>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }

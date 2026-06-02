@@ -3,6 +3,7 @@ import { supabase } from '../../services/supabase';
 import { useConfig } from '../../hooks/useSupabase';
 import { useToast } from '../../context/ToastContext';
 import { MONTHS } from '../../utils/formatters';
+import PageShell from '../../components/ui/PageShell';
 
 export default function SocietySettings() {
   const { addToast } = useToast();
@@ -73,14 +74,16 @@ export default function SocietySettings() {
   if (!form) return <div className="flex-center" style={{ height: '60vh' }}><div className="spinner" style={{ width: 40, height: 40 }} /></div>;
 
   return (
-    <div>
-      <div className="page-header">
-        <div><h1>🔧 Society Settings</h1><p className="page-subtitle">Update society information and configuration</p></div>
+    <PageShell
+      icon="settings"
+      title="Society Settings"
+      subtitle="Update society information and configuration"
+      actions={
         <button className="btn btn-primary" onClick={handleSave} disabled={saving} id="save-settings-btn">
           {saving ? <><span className="spinner" style={{ width: 14, height: 14 }} /> Saving...</> : '💾 Save All Settings'}
         </button>
-      </div>
-
+      }
+    >
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
         {/* Basic Info */}
         <div className="card">
@@ -202,6 +205,6 @@ export default function SocietySettings() {
           )}
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

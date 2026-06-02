@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext';
 import { generateId, getInitials } from '../../utils/formatters';
 import { uploadContactPhoto, deleteContactPhoto } from '../../utils/uploadContactPhoto';
 import Icon from '../../components/Icon';
+import PageShell from '../../components/ui/PageShell';
 
 const CATEGORIES = [
   'Plumber', 'Electrician', 'Carpenter', 'Security Guard',
@@ -131,18 +132,16 @@ export default function ManageContacts() {
   }, {});
 
   return (
-    <div>
-      {/* Header */}
-      <div className="page-header">
-        <div className="page-header-left">
-          <h1 className="page-title"><Icon name="headphone" size={24}/> Manage Contacts</h1>
-          <p className="page-subtitle">Add, edit or remove important building contacts</p>
-        </div>
+    <PageShell
+      icon="headphone"
+      title="Manage Contacts"
+      subtitle="Add, edit or remove important building contacts"
+      actions={
         <button className="btn btn-primary" onClick={openAdd}>
           <Icon name="plus" size={16}/> Add Contact
         </button>
-      </div>
-
+      }
+    >
       {/* Summary */}
       <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', marginBottom: '1.5rem' }}>
         <div className="kpi-card kpi-blue">
@@ -328,6 +327,6 @@ export default function ManageContacts() {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

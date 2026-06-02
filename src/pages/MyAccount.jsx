@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import { uploadProfilePhoto } from '../utils/uploadPhoto';
 import { getInitials } from '../utils/formatters';
 import Icon from '../components/Icon';
+import PageShell from '../components/ui/PageShell';
 
 export default function MyAccount() {
   const { user, updateUser } = useAuth();
@@ -119,14 +120,11 @@ export default function MyAccount() {
   if (fetchingProfile) return <div className="loading-screen"><div className="spinner lg"></div></div>;
 
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-header-left">
-          <h1 className="page-title"><Icon name="user" size={24} /> My Account</h1>
-          <p className="page-subtitle">Manage your profile, photo and security — Flat {user?.flatNo}</p>
-        </div>
-      </div>
-
+    <PageShell
+      icon="user"
+      title="My Account"
+      subtitle={`Manage your profile, photo and security — Flat ${user?.flatNo}`}
+    >
       <div className="grid-2 mb-3">
         {/* Profile Photo Section */}
         <div className="card">
@@ -239,6 +237,6 @@ export default function MyAccount() {
           </button>
         </form>
       </div>
-    </div>
+    </PageShell>
   );
 }

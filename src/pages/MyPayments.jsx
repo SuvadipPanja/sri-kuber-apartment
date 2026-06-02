@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
-import { formatCurrency, formatDate, MONTHS } from '../utils/formatters';
+import { formatCurrency, formatDate } from '../utils/formatters';
 import { getFlatPayments } from '../utils/calculations';
 import Icon from '../components/Icon';
 import { generateReceipt } from '../utils/receiptUtils';
+import PageShell from '../components/ui/PageShell';
+import MonthYearFilter from '../components/ui/MonthYearFilter';
+import EmptyState from '../components/ui/EmptyState';
 
 function mapPayment(p) {
   return {
@@ -36,26 +39,19 @@ export default function MyPayments() {
   const filteredTotal = myPayments.reduce((s, p) => s + Number(p.amountPaid || 0), 0);
 
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-header-left">
-          <h1 className="page-title"><Icon name="wallet" size={24} /> My Payments</h1>
-          <p className="page-subtitle">Flat {user?.flatNo} &mdash; {user?.ownerName}</p>
-        </div>
-        <div className="flex gap-1 items-center">
-          <select className="form-select" style={{ width: 'auto' }} value={selectedMonth}
-            onChange={e => setSelectedMonth(e.target.value)}>
-            <option value="All">All Months</option>
-            {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-          <select className="form-select" style={{ width: 'auto' }} value={selectedYear}
-            onChange={e => setSelectedYear(e.target.value === 'All' ? 'All' : Number(e.target.value))}>
-            <option value="All">All Years</option>
-            {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
-        </div>
-      </div>
-
+    <PageShell
+      icon="wallet"
+      title="My Payments"
+      subtitle={`Flat ${user?.flatNo} — ${user?.ownerName}`}
+      actions={
+        <MonthYearFilter
+          month={selectedMonth}
+          year={selectedYear}
+          onMonthChange={setSelectedMonth}
+          onYearChange={setSelectedYear}
+        />
+      }
+    >
       {/* KPI Summary */}
       <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', marginBottom: '1.5rem' }}>
         <div className="kpi-card kpi-green">
@@ -95,11 +91,11 @@ export default function MyPayments() {
         {loading ? (
           <div className="flex-center" style={{ padding: '3rem' }}><div className="spinner lg" /></div>
         ) : myPayments.length === 0 ? (
-          <div className="empty-state">
-            <Icon name="wallet" size={48} className="empty-state-icon" />
-            <h3>No Payments Found</h3>
-            <p>No payment records for Flat {user?.flatNo}{selectedMonth !== 'All' ? ` in ${selectedMonth}` : ''}.</p>
-          </div>
+          <EmptyState
+            icon="wallet"
+            title="No Payments Found"
+            description={`No payment records for Flat ${user?.flatNo}${selectedMonth !== 'All' ? ` in ${selectedMonth}` : ''}.`}
+          />
         ) : (
           <div className="table-scroll">
             <table className="data-table">
@@ -144,6 +140,6 @@ export default function MyPayments() {
           </div>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }

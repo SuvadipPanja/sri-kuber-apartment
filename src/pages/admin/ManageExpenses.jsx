@@ -5,6 +5,8 @@ import { useToast } from '../../context/ToastContext';
 import { formatCurrency, formatDate, MONTHS, EXPENSE_TYPES, generateId } from '../../utils/formatters';
 import { uploadExpenseAttachment } from '../../utils/uploadExpenseAttachment';
 import Icon from '../../components/Icon';
+import PageShell from '../../components/ui/PageShell';
+import MonthYearFilter from '../../components/ui/MonthYearFilter';
 
 function mapExpense(e) {
   return {
@@ -149,25 +151,26 @@ export default function ManageExpenses() {
   };
 
   return (
-    <div>
-      <div className="page-header">
-        <div>
-          <h1 className="page-title"><Icon name="receipt" size={24} /> Manage Expenses</h1>
-          <p className="page-subtitle">Add, edit, or delete expense records with bill attachments</p>
-        </div>
-        <div className="flex gap-1 items-center flex-wrap">
-          <select className="form-select" style={{ width: 'auto' }} value={month} onChange={e => setFilterMonth(e.target.value)}>
-            {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-          <select className="form-select" style={{ width: 'auto' }} value={year} onChange={e => setFilterYear(Number(e.target.value))}>
-            {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
+    <PageShell
+      icon="expense"
+      title="Manage Expenses"
+      subtitle="Add, edit, or delete expense records with bill attachments"
+      actions={
+        <>
+          <MonthYearFilter
+            month={month}
+            year={year}
+            onMonthChange={setFilterMonth}
+            onYearChange={setFilterYear}
+            showAllMonths={false}
+            showAllYears={false}
+          />
           <button className="btn btn-primary" onClick={openAdd}>
             <Icon name="plus" size={16} /> Add Expense
           </button>
-        </div>
-      </div>
-
+        </>
+      }
+    >
       <div className="card">
         <div className="flex-between mb-2">
           <h3 style={{ fontSize: '1rem' }}>{month} {year} — {filtered.length} records</h3>
@@ -393,6 +396,6 @@ export default function ManageExpenses() {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

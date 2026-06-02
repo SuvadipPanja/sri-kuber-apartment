@@ -3,6 +3,8 @@ import { supabase } from '../../services/supabase';
 import { useSupabaseTable, useConfig } from '../../hooks/useSupabase';
 import { useToast } from '../../context/ToastContext';
 import { formatCurrency, formatDate, MONTHS, generateId } from '../../utils/formatters';
+import PageShell from '../../components/ui/PageShell';
+import MonthYearFilter from '../../components/ui/MonthYearFilter';
 
 const EMPTY = { incomeDate: new Date().toISOString().split('T')[0], source: '', amount: '', month: 'May', year: 2026, remarks: '' };
 
@@ -65,20 +67,24 @@ export default function ManageIncome() {
   };
 
   return (
-    <div>
-      <div className="page-header">
-        <div><h1>💵 Manage Other Income</h1><p className="page-subtitle">Add, edit, or delete additional income records</p></div>
-        <div className="flex gap-1 items-center">
-          <select className="form-select" style={{ width: 'auto' }} value={month} onChange={e => setFilterMonth(e.target.value)}>
-            {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-          <select className="form-select" style={{ width: 'auto' }} value={year} onChange={e => setFilterYear(Number(e.target.value))}>
-            {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
+    <PageShell
+      icon="income"
+      title="Manage Other Income"
+      subtitle="Add, edit, or delete additional income records"
+      actions={
+        <>
+          <MonthYearFilter
+            month={month}
+            year={year}
+            onMonthChange={setFilterMonth}
+            onYearChange={setFilterYear}
+            showAllMonths={false}
+            showAllYears={false}
+          />
           <button className="btn btn-primary" onClick={openAdd}>➕ Add Income</button>
-        </div>
-      </div>
-
+        </>
+      }
+    >
       <div className="card">
         <div className="flex-between mb-2">
           <h3 className="text-base m-0">{month} {year} — {filtered.length} records</h3>
@@ -163,6 +169,6 @@ export default function ManageIncome() {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

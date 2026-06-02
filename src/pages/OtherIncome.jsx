@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
-import { formatCurrency, formatDate, MONTHS } from '../utils/formatters';
+import { formatCurrency, formatDate } from '../utils/formatters';
 import { totalOtherIncome } from '../utils/calculations';
+import PageShell from '../components/ui/PageShell';
+import MonthYearFilter from '../components/ui/MonthYearFilter';
+import EmptyState from '../components/ui/EmptyState';
 
 export default function OtherIncome() {
   const { config } = useConfig();
@@ -17,24 +20,19 @@ export default function OtherIncome() {
   const total = totalOtherIncome(rawIncome, month, year);
 
   return (
-    <div>
-      <div className="page-header">
-        <div>
-          <h1>💵 Other Income</h1>
-          <p className="page-subtitle">Additional society income sources</p>
-        </div>
-        <div className="flex gap-1 items-center">
-          <select className="form-select" style={{ width: 'auto' }} value={month} onChange={e => setSelectedMonth(e.target.value)}>
-            <option value="All">All Months</option>
-            {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-          <select className="form-select" style={{ width: 'auto' }} value={year} onChange={e => setSelectedYear(e.target.value === 'All' ? 'All' : Number(e.target.value))}>
-            <option value="All">All Years</option>
-            {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
-        </div>
-      </div>
-
+    <PageShell
+      icon="income"
+      title="Other Income"
+      subtitle="Additional society income sources"
+      actions={
+        <MonthYearFilter
+          month={month}
+          year={year}
+          onMonthChange={setSelectedMonth}
+          onYearChange={setSelectedYear}
+        />
+      }
+    >
       <div className="kpi-grid mb-3">
         <div className="kpi-card kpi-accent">
           <div className="kpi-top">
@@ -50,11 +48,11 @@ export default function OtherIncome() {
         <h3 className="chart-title">📋 {month} {year} — Income Records</h3>
         {loading ? <div className="flex-center p-3"><div className="spinner"></div></div> :
           monthIncome.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">📭</div>
-              <h3>No Other Income</h3>
-              <p>No additional income recorded for {month} {year}.</p>
-            </div>
+            <EmptyState
+              icon="income"
+              title="No Other Income"
+              description={`No additional income recorded for ${month} ${year}.`}
+            />
           ) : (
             <div className="table-wrapper">
               <table className="data-table">
@@ -83,6 +81,6 @@ export default function OtherIncome() {
             </div>
           )}
       </div>
-    </div>
+    </PageShell>
   );
 }

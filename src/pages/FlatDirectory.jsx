@@ -2,6 +2,7 @@ import { useSupabaseTable } from '../hooks/useSupabase';
 import { useAuth } from '../context/AuthContext';
 import { getInitials } from '../utils/formatters';
 import Icon from '../components/Icon';
+import PageShell from '../components/ui/PageShell';
 
 export default function FlatDirectory() {
   const { isSuperAdmin } = useAuth();
@@ -62,18 +63,17 @@ export default function FlatDirectory() {
   if (loading) return <div className="loading-screen"><div className="loading-logo">SK</div><div className="spinner lg"></div></div>;
 
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-header-left">
-          <h1 className="page-title"><Icon name="users" size={24} /> Flat Directory</h1>
-          <p className="page-subtitle">All residents of Sri Kuber Apartment</p>
-        </div>
-        <div className="flex gap-1">
+    <PageShell
+      icon="users"
+      title="Flat Directory"
+      subtitle="All residents of Sri Kuber Apartment"
+      actions={
+        <>
           <span className="badge badge-success">{activeOwners.length} Active</span>
           <span className="badge badge-muted">{inactiveOwners.length} Vacant</span>
-        </div>
-      </div>
-
+        </>
+      }
+    >
       <div className="section-divider">Active Residents</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }} className="mb-3">
         {activeOwners.map(o => <OwnerCard key={o.flat_no} owner={o} />)}
@@ -100,6 +100,6 @@ export default function FlatDirectory() {
           </div>
         </>
       )}
-    </div>
+    </PageShell>
   );
 }

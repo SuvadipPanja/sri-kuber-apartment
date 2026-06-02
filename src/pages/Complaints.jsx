@@ -5,6 +5,8 @@ import { supabase } from '../services/supabase';
 import { useSupabaseTable } from '../hooks/useSupabase';
 import { formatDate, generateId } from '../utils/formatters';
 import Icon from '../components/Icon';
+import PageShell from '../components/ui/PageShell';
+import EmptyState from '../components/ui/EmptyState';
 
 const CATEGORIES = ['Plumbing', 'Electrical', 'Cleaning', 'Lift / Elevator', 'Noise', 'Security', 'Water Supply', 'Other'];
 const STATUS_BADGE = {
@@ -57,19 +59,16 @@ export default function Complaints() {
   };
 
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-header-left">
-          <h1 className="page-title"><Icon name="complaint" size={24} /> My Complaints</h1>
-          <p className="page-subtitle">Submit and track maintenance requests — Flat {user?.flatNo}</p>
-        </div>
-        <div className="page-actions">
-          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-            <Icon name="plus" size={16} /> New Complaint
-          </button>
-        </div>
-      </div>
-
+    <PageShell
+      icon="complaint"
+      title="My Complaints"
+      subtitle={`Submit and track maintenance requests — Flat ${user?.flatNo}`}
+      actions={
+        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+          <Icon name="plus" size={16} /> New Complaint
+        </button>
+      }
+    >
       {/* Filter */}
       <div className="month-tab-bar mb-3" style={{ maxWidth: 420 }}>
         {['all', 'open', 'in_progress', 'resolved'].map(s => (
@@ -86,11 +85,11 @@ export default function Complaints() {
       {loading ? <div className="flex-center" style={{ height: '30vh' }}><div className="spinner lg"></div></div> :
         filtered.length === 0 ? (
           <div className="card">
-            <div className="empty-state">
-              <Icon name="check" size={48} className="empty-state-icon" />
-              <h3>No Complaints</h3>
-              <p>{filterStatus === 'all' ? 'You haven\'t submitted any complaints yet.' : `No ${STATUS_LABEL[filterStatus]?.toLowerCase()} complaints.`}</p>
-            </div>
+            <EmptyState
+              icon="check"
+              title="No Complaints"
+              description={filterStatus === 'all' ? "You haven't submitted any complaints yet." : `No ${STATUS_LABEL[filterStatus]?.toLowerCase()} complaints.`}
+            />
           </div>
         ) : (
           <div className="flex-col gap-2">
@@ -152,6 +151,6 @@ export default function Complaints() {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
-import { formatCurrency, MONTHS } from '../utils/formatters';
+import { formatCurrency } from '../utils/formatters';
 import {
   buildPendingDues, totalCollection, totalExpenses,
   totalOtherIncome, calculateNetBalance,
 } from '../utils/calculations';
 import Icon from '../components/Icon';
+import PageShell from '../components/ui/PageShell';
+import MonthYearFilter from '../components/ui/MonthYearFilter';
 
 const MONTHS_ORDER = ['January','February','March','April','May','June',
   'July','August','September','October','November','December'];
@@ -98,28 +100,30 @@ export default function PrintableStatement() {
 
   return (
     <div>
-      {/* Controls */}
-      <div className="page-header no-print">
-        <div className="page-header-left">
-          <h1 className="page-title"><Icon name="printer" size={24} /> Statement & Reports</h1>
-          <p className="page-subtitle">Print or share the monthly maintenance statement</p>
-        </div>
-        <div className="flex gap-1 items-center flex-wrap">
-          <select className="form-select" style={{ width: 'auto' }} value={month}
-            onChange={e => setSelectedMonth(e.target.value)}>
-            {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-          <select className="form-select" style={{ width: 'auto' }} value={year}
-            onChange={e => setSelectedYear(Number(e.target.value))}>
-            {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
-          <button className="btn btn-primary" onClick={handlePrint}>
-            <Icon name="printer" size={16} /> Print / PDF
-          </button>
-          <button className="btn btn-success" onClick={handleWhatsAppShare}>
-            <Icon name="share" size={16} /> WhatsApp
-          </button>
-        </div>
+      <div className="no-print">
+        <PageShell
+          icon="printer"
+          title="Statement & Reports"
+          subtitle="Print or share the monthly maintenance statement"
+          actions={
+            <>
+              <MonthYearFilter
+                month={month}
+                year={year}
+                onMonthChange={setSelectedMonth}
+                onYearChange={setSelectedYear}
+                showAllMonths={false}
+                showAllYears={false}
+              />
+              <button type="button" className="btn btn-primary" onClick={handlePrint}>
+                <Icon name="printer" size={16} /> Print / PDF
+              </button>
+              <button type="button" className="btn btn-success" onClick={handleWhatsAppShare}>
+                <Icon name="share" size={16} /> WhatsApp
+              </button>
+            </>
+          }
+        />
       </div>
 
       {/* Document */}

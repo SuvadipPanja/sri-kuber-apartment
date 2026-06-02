@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useSupabaseTable } from '../hooks/useSupabase';
 import { getInitials } from '../utils/formatters';
 import Icon from '../components/Icon';
+import PageShell from '../components/ui/PageShell';
+import EmptyState from '../components/ui/EmptyState';
 
 /* ── Category metadata ── */
 const CATEGORIES = [
@@ -129,14 +131,11 @@ export default function ImportantContacts() {
   const usedCats = ['All', ...Object.keys(counts)];
 
   return (
-    <div>
-      {/* Header */}
-      <div className="page-header">
-        <div className="page-header-left">
-          <h1 className="page-title"><Icon name="headphone" size={24}/> Important Contacts</h1>
-          <p className="page-subtitle">Building services & emergency numbers</p>
-        </div>
-        {/* Search */}
+    <PageShell
+      icon="headphone"
+      title="Important Contacts"
+      subtitle="Building services & emergency numbers"
+      actions={
         <div style={{ position: 'relative', minWidth: 220 }}>
           <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }}>
             <Icon name="search" size={15}/>
@@ -150,8 +149,8 @@ export default function ImportantContacts() {
             style={{ paddingLeft: '2.4rem' }}
           />
         </div>
-      </div>
-
+      }
+    >
       {/* KPI summary */}
       <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', marginBottom: '1.5rem' }}>
         <div className="kpi-card kpi-blue">
@@ -193,16 +192,18 @@ export default function ImportantContacts() {
       {loading ? (
         <div className="flex-center" style={{ padding: '4rem' }}><div className="spinner lg"/></div>
       ) : contacts.length === 0 ? (
-        <div className="empty-state" style={{ marginTop: '2rem' }}>
-          <Icon name="headphone" size={48} className="empty-state-icon"/>
-          <h3>No Contacts Found</h3>
-          <p>{rawContacts.length === 0 ? 'Admin has not added any contacts yet.' : 'No contacts match your search.'}</p>
+        <div style={{ marginTop: '2rem' }}>
+          <EmptyState
+            icon="headphone"
+            title="No Contacts Found"
+            description={rawContacts.length === 0 ? 'Admin has not added any contacts yet.' : 'No contacts match your search.'}
+          />
         </div>
       ) : (
         <div className="contact-grid">
           {contacts.map(c => <ContactCard key={c.id} contact={c}/>)}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

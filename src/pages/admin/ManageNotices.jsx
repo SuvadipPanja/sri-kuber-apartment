@@ -4,6 +4,7 @@ import { useSupabaseTable } from '../../hooks/useSupabase';
 import { useToast } from '../../context/ToastContext';
 import { formatDate, generateId } from '../../utils/formatters';
 import Icon from '../../components/Icon';
+import PageShell from '../../components/ui/PageShell';
 
 const EMPTY = { title: '', content: '', priority: 'normal', expiresAt: '' };
 
@@ -53,15 +54,14 @@ export default function ManageNotices() {
   const prBadge = { urgent: 'badge-danger', important: 'badge-warning', normal: 'badge-info' };
 
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-header-left">
-          <h1 className="page-title"><Icon name="megaphone" size={24} /> Manage Notices</h1>
-          <p className="page-subtitle">Post, edit, or delete society announcements</p>
-        </div>
+    <PageShell
+      icon="notice"
+      title="Manage Notices"
+      subtitle="Post, edit, or delete society announcements"
+      actions={
         <button className="btn btn-primary" onClick={openAdd}><Icon name="plus" size={16} /> Post Notice</button>
-      </div>
-
+      }
+    >
       {loading ? <div className="flex-center" style={{ height: '30vh' }}><div className="spinner lg" /></div> :
         notices.length === 0 ? (
           <div className="card"><div className="empty-state"><Icon name="megaphone" size={48} className="empty-state-icon" /><h3>No Notices</h3><p>Post the first notice for your residents.</p></div></div>
@@ -126,6 +126,6 @@ export default function ManageNotices() {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }
