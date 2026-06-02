@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
+import { usePeriodFilter } from '../hooks/usePeriodFilter';
 import { formatCurrency } from '../utils/formatters';
 import {
   buildPendingDues, totalCollection, totalExpenses,
@@ -35,11 +35,7 @@ export default function PrintableStatement() {
   const { data: rawExpenses } = useSupabaseTable('expenses');
   const { data: rawIncome }   = useSupabaseTable('income');
 
-  const [selectedMonth, setSelectedMonth] = useState(null);
-  const [selectedYear,  setSelectedYear]  = useState(null);
-
-  const month = selectedMonth ?? config?.current_month ?? 'May';
-  const year  = selectedYear  ?? config?.current_year  ?? 2026;
+  const { month, year, setMonth: setSelectedMonth, setYear: setSelectedYear } = usePeriodFilter();
 
   const owners   = rawOwners.map(mapOwner);
   const payments = rawPayments.map(mapPayment);

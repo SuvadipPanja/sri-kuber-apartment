@@ -1,33 +1,32 @@
 import { useState } from 'react';
 import { supabase } from '../../services/supabase';
-import { useSupabaseTable, useConfig } from '../../hooks/useSupabase';
+import { useSupabaseTable } from '../../hooks/useSupabase';
+import { usePeriodFilter } from '../../hooks/usePeriodFilter';
 import { useToast } from '../../context/ToastContext';
-import { formatCurrency, formatDate, MONTHS, generateId } from '../../utils/formatters';
+import { formatCurrency, formatDate, MONTHS, generateId, getCurrentMonth, getCurrentYear } from '../../utils/formatters';
 import PageShell from '../../components/ui/PageShell';
 import MonthYearFilter from '../../components/ui/MonthYearFilter';
 
-const EMPTY = { incomeDate: new Date().toISOString().split('T')[0], source: '', amount: '', month: 'May', year: 2026, remarks: '' };
+const emptyIncomeForm = () => ({
+  incomeDate: new Date().toISOString().split('T')[0], source: '', amount: '',
+  month: getCurrentMonth(), year: getCurrentYear(), remarks: '',
+});
 
 export default function ManageIncome() {
   const { addToast } = useToast();
-  const { config } = useConfig();
   const { data: rawIncome, loading, refetch } = useSupabaseTable('income', q => q.order('income_date', { ascending: false }));
   
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [form, setForm] = useState({ ...EMPTY });
+  const [form, setForm] = useState(emptyIncomeForm());
   const [saving, setSaving] = useState(false);
-  
-  const [filterMonth, setFilterMonth] = useState(null);
-  const [filterYear, setFilterYear] = useState(null);
+  const { month, year, setMonth: setFilterMonth, setYear: setFilterYear } = usePeriodFilter();
 
-  const month = filterMonth ?? config?.current_month ?? 'May';
-  const year = filterYear ?? config?.current_year ?? 2026;
   const filtered = rawIncome.filter(i => i.month === month && i.year === Number(year));
 
   const openAdd = () => {
     setEditId(null);
-    setForm({ ...EMPTY, month: config?.current_month || 'May', year: config?.current_year || 2026 });
+    setForm(emptyIncomeForm());
     setShowModal(true);
   };
 

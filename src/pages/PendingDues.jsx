@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
+import { useSupabaseTable } from '../hooks/useSupabase';
+import { usePeriodFilter } from '../hooks/usePeriodFilter';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { buildPendingDues, getFlatStats } from '../utils/calculations';
 import Icon from '../components/Icon';
@@ -15,16 +16,11 @@ function mapOwner(o) {
 }
 
 export default function PendingDues() {
-  const { config }  = useConfig();
   const { data: rawOwners }   = useSupabaseTable('owners');
   const { data: rawPayments, loading } = useSupabaseTable('payments');
 
-  const [selectedMonth, setSelectedMonth] = useState(null);
-  const [selectedYear,  setSelectedYear]  = useState(null);
+  const { month, year, setMonth: setSelectedMonth, setYear: setSelectedYear } = usePeriodFilter();
   const [view, setView] = useState('all'); // 'all' | 'pending' | 'paid'
-
-  const month = selectedMonth ?? config?.current_month ?? 'May';
-  const year  = selectedYear  ?? config?.current_year  ?? 2026;
 
   const owners   = rawOwners.map(mapOwner);
   const payments = rawPayments.map(mapPayment);

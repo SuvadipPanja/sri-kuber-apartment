@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react';
 import { supabase } from '../../services/supabase';
-import { useSupabaseTable, useConfig } from '../../hooks/useSupabase';
+import { useSupabaseTable } from '../../hooks/useSupabase';
+import { usePeriodFilter } from '../../hooks/usePeriodFilter';
 import { useToast } from '../../context/ToastContext';
-import { formatCurrency, formatDate, MONTHS, EXPENSE_TYPES, generateId } from '../../utils/formatters';
+import { formatCurrency, formatDate, MONTHS, EXPENSE_TYPES, generateId, getCurrentMonth, getCurrentYear } from '../../utils/formatters';
 import { uploadExpenseAttachment } from '../../utils/uploadExpenseAttachment';
 import Icon from '../../components/Icon';
 import PageShell from '../../components/ui/PageShell';
@@ -20,31 +21,27 @@ function mapExpense(e) {
   };
 }
 
-const EMPTY = {
+const emptyExpenseForm = () => ({
   expenseDate: new Date().toISOString().split('T')[0],
   expenseType: '', customType: '', billAmount: '',
-  builderContribution: 0, paidTo: '', month: 'May', year: 2026, remarks: '',
-};
+  builderContribution: 0, paidTo: '', month: getCurrentMonth(), year: getCurrentYear(), remarks: '',
+});
 
 export default function ManageExpenses() {
   const { addToast } = useToast();
-  const { config } = useConfig();
   const { data: rawExpenses, loading, refetch } = useSupabaseTable('expenses', q => q.order('expense_date', { ascending: false }));
 
   const [showModal, setShowModal]   = useState(false);
   const [editId, setEditId]         = useState(null);
-  const [form, setForm]             = useState({ ...EMPTY });
+  const [form, setForm]             = useState(emptyExpenseForm());
   const [saving, setSaving]         = useState(false);
-  const [filterMonth, setFilterMonth] = useState(null);
-  const [filterYear, setFilterYear]   = useState(null);
+  const { month, year, setMonth: setFilterMonth, setYear: setFilterYear } = usePeriodFilter();
   const [attachmentFile, setAttachmentFile] = useState(null);
   const [attachmentPreview, setAttachmentPreview] = useState(null);
   const [lightboxUrl, setLightboxUrl] = useState(null);
   const fileRef = useRef(null);
 
   const expenses = rawExpenses.map(mapExpense);
-  const month = filterMonth ?? config?.current_month ?? 'May';
-  const year  = filterYear  ?? config?.current_year  ?? 2026;
   const filtered = expenses.filter(e => e.month === month && e.year === Number(year));
 
   const netExpense = Math.max(0, Number(form.billAmount || 0) - Number(form.builderContribution || 0));
@@ -57,7 +54,7 @@ export default function ManageExpenses() {
 
   const openAdd = () => {
     setEditId(null);
-    setForm({ ...EMPTY, month: config?.current_month || 'May', year: config?.current_year || 2026 });
+    setForm(emptyExpenseForm());
     resetModal();
     setShowModal(true);
   };

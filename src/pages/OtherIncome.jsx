@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
+import { useSupabaseTable } from '../hooks/useSupabase';
+import { usePeriodFilter } from '../hooks/usePeriodFilter';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { totalOtherIncome } from '../utils/calculations';
 import PageShell from '../components/ui/PageShell';
@@ -7,14 +7,9 @@ import MonthYearFilter from '../components/ui/MonthYearFilter';
 import EmptyState from '../components/ui/EmptyState';
 
 export default function OtherIncome() {
-  const { config } = useConfig();
   const { data: rawIncome, loading } = useSupabaseTable('income');
 
-  const [selectedMonth, setSelectedMonth] = useState(null);
-  const [selectedYear, setSelectedYear] = useState(null);
-
-  const month = selectedMonth ?? config?.current_month ?? 'May';
-  const year = selectedYear ?? config?.current_year ?? 2026;
+  const { month, year, setMonth: setSelectedMonth, setYear: setSelectedYear } = usePeriodFilter();
 
   const monthIncome = rawIncome.filter(i => i.month === month && i.year === Number(year));
   const total = totalOtherIncome(rawIncome, month, year);

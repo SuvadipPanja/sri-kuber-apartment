@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
+import { useSupabaseTable } from '../hooks/useSupabase';
+import { usePeriodFilter } from '../hooks/usePeriodFilter';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { getMonthExpenses, totalExpenses } from '../utils/calculations';
 import Icon from '../components/Icon';
@@ -20,15 +21,10 @@ function mapExpense(e) {
 }
 
 export default function Expenses() {
-  const { config } = useConfig();
   const { data: rawExpenses, loading } = useSupabaseTable('expenses');
 
-  const [selectedMonth, setSelectedMonth] = useState(null);
-  const [selectedYear,  setSelectedYear]  = useState(null);
-  const [lightboxUrl,   setLightboxUrl]   = useState(null);
-
-  const month = selectedMonth ?? config?.current_month ?? 'May';
-  const year  = selectedYear  ?? config?.current_year  ?? 2026;
+  const { month, year, setMonth: setSelectedMonth, setYear: setSelectedYear } = usePeriodFilter();
+  const [lightboxUrl, setLightboxUrl] = useState(null);
 
   const expenses      = rawExpenses.map(mapExpense);
   const monthExpenses = getMonthExpenses(expenses, month, year);

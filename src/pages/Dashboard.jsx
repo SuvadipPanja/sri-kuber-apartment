@@ -1,6 +1,6 @@
-import { useState } from 'react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
+import { usePeriodFilter } from '../hooks/usePeriodFilter';
 import { formatCurrency, MONTHS } from '../utils/formatters';
 import { totalCollection, totalExpenses, totalOtherIncome, calculateNetBalance, getFlatStats, buildPendingDues } from '../utils/calculations';
 import { Link } from 'react-router-dom';
@@ -30,13 +30,7 @@ export default function Dashboard() {
   const { data: rawIncome } = useSupabaseTable('income');
   const { data: notices } = useSupabaseTable('notices', q => q.order('created_at', { ascending: false }).limit(5));
 
-  const defaultMonth = config?.current_month || 'May';
-  const defaultYear = config?.current_year || 2026;
-  const [selectedMonth, setSelectedMonth] = useState(null);
-  const [selectedYear, setSelectedYear] = useState(null);
-
-  const month = selectedMonth ?? defaultMonth;
-  const year = selectedYear ?? defaultYear;
+  const { month, year, setMonth: setSelectedMonth, setYear: setSelectedYear } = usePeriodFilter();
 
   const owners   = rawOwners.map(mapOwner);
   const payments = rawPayments.map(mapPayment);

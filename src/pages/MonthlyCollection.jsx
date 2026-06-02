@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
+import { useSupabaseTable } from '../hooks/useSupabase';
+import { usePeriodFilter } from '../hooks/usePeriodFilter';
 import { formatCurrency } from '../utils/formatters';
 import { totalCollection, buildPendingDues } from '../utils/calculations';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
@@ -11,15 +11,10 @@ function mapPayment(p) { return { ...p, flatNo: p.flat_no, ownerName: p.owner_na
 function mapOwner(o)   { return { ...o, flatNo: o.flat_no, ownerName: o.owner_name, monthlyCharge: o.monthly_charge }; }
 
 export default function MonthlyCollection() {
-  const { config } = useConfig();
   const { data: rawOwners, loading: ownersLoading } = useSupabaseTable('owners');
   const { data: rawPayments, loading: paymentsLoading } = useSupabaseTable('payments');
 
-  const [selectedMonth, setSelectedMonth] = useState(null);
-  const [selectedYear, setSelectedYear] = useState(null);
-
-  const month = selectedMonth ?? config?.current_month ?? 'May';
-  const year = selectedYear ?? config?.current_year ?? 2026;
+  const { month, year, setMonth: setSelectedMonth, setYear: setSelectedYear } = usePeriodFilter();
 
   const owners = rawOwners.map(mapOwner);
   const payments = rawPayments.map(mapPayment);

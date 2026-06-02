@@ -1,6 +1,6 @@
-import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
+import { useSupabaseTable } from '../hooks/useSupabase';
+import { usePeriodFilter } from '../hooks/usePeriodFilter';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { getFlatPayments } from '../utils/calculations';
 import Icon from '../components/Icon';
@@ -22,11 +22,8 @@ function mapPayment(p) {
 
 export default function MyPayments() {
   const { user }    = useAuth();
-  const { config }  = useConfig();
   const { data: rawPayments, loading } = useSupabaseTable('payments');
-
-  const [selectedMonth, setSelectedMonth] = useState('All');
-  const [selectedYear,  setSelectedYear]  = useState('All');
+  const { month: selectedMonth, year: selectedYear, setMonth: setSelectedMonth, setYear: setSelectedYear } = usePeriodFilter();
 
   const payments    = rawPayments.map(mapPayment);
   const allMine     = getFlatPayments(payments, user?.flatNo);

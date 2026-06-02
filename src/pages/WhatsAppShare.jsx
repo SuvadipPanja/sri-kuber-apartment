@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
+import { usePeriodFilter } from '../hooks/usePeriodFilter';
 import { formatCurrency, MONTHS } from '../utils/formatters';
 import { buildPendingDues, totalCollection, totalExpenses, totalOtherIncome, calculateNetBalance } from '../utils/calculations';
 import { useToast } from '../context/ToastContext';
@@ -16,12 +17,8 @@ export default function WhatsAppShare() {
   const { data: rawExpenses } = useSupabaseTable('expenses');
   const { data: rawIncome } = useSupabaseTable('income');
 
-  const [selectedMonth, setSelectedMonth] = useState(null);
-  const [selectedYear, setSelectedYear] = useState(null);
+  const { month, year, setMonth: setSelectedMonth, setYear: setSelectedYear } = usePeriodFilter();
   const [copied, setCopied] = useState(false);
-
-  const month = selectedMonth ?? config?.current_month ?? 'May';
-  const year = selectedYear ?? config?.current_year ?? 2026;
 
   const owners = rawOwners.map(mapOwner);
   const payments = rawPayments.map(mapPayment);

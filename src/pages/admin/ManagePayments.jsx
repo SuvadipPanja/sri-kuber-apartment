@@ -1,38 +1,38 @@
 import { useState } from 'react';
 import { supabase } from '../../services/supabase';
-import { useSupabaseTable, useConfig } from '../../hooks/useSupabase';
+import { useSupabaseTable } from '../../hooks/useSupabase';
+import { usePeriodFilter } from '../../hooks/usePeriodFilter';
 import { useToast } from '../../context/ToastContext';
-import { formatCurrency, formatDate, MONTHS, PAYMENT_MODES, generateId } from '../../utils/formatters';
+import { formatCurrency, formatDate, MONTHS, PAYMENT_MODES, generateId, getCurrentMonth, getCurrentYear } from '../../utils/formatters';
 import PageShell from '../../components/ui/PageShell';
 import MonthYearFilter from '../../components/ui/MonthYearFilter';
 
 function mapPayment(p) { return { ...p, flatNo: p.flat_no, ownerName: p.owner_name, amountPaid: p.amount_paid, paymentDate: p.payment_date, paymentMode: p.payment_mode }; }
 
-const EMPTY_FORM = { flatNo: '', ownerName: '', month: 'May', year: 2026, amountPaid: 500, paymentDate: new Date().toISOString().split('T')[0], paymentMode: 'In Cash', remarks: '' };
+const EMPTY_FORM = () => ({
+  flatNo: '', ownerName: '', month: getCurrentMonth(), year: getCurrentYear(),
+  amountPaid: 500, paymentDate: new Date().toISOString().split('T')[0], paymentMode: 'In Cash', remarks: '',
+});
 
 export default function ManagePayments() {
   const { addToast } = useToast();
-  const { config } = useConfig();
   const { data: rawPayments, loading, refetch } = useSupabaseTable('payments', q => q.order('payment_date', { ascending: false }));
   const { data: rawOwners } = useSupabaseTable('owners');
 
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [form, setForm] = useState({ ...EMPTY_FORM, month: config?.current_month || 'May', year: config?.current_year || 2026 });
+  const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
-  const [filterMonth, setFilterMonth] = useState(null);
-  const [filterYear, setFilterYear] = useState(null);
+  const { month, year, setMonth: setFilterMonth, setYear: setFilterYear } = usePeriodFilter();
 
   const payments = rawPayments.map(mapPayment);
   const activeOwners = rawOwners.filter(o => o.active);
 
-  const month = filterMonth ?? config?.current_month ?? 'May';
-  const year = filterYear ?? config?.current_year ?? 2026;
   const filtered = payments.filter(p => p.month === month && p.year === Number(year));
 
   const openAdd = () => {
     setEditId(null);
-    setForm({ ...EMPTY_FORM, month: config?.current_month || 'May', year: config?.current_year || 2026 });
+    setForm(EMPTY_FORM());
     setShowModal(true);
   };
 
