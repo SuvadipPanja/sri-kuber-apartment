@@ -4,6 +4,7 @@ import { supabase } from '../../services/supabase';
 import { useSupabaseTable } from '../../hooks/useSupabase';
 import { useToast } from '../../context/ToastContext';
 import PageShell from '../../components/ui/PageShell';
+import { isValidLoginPassword } from '../../utils/security';
 
 export default function ResetPassword() {
   const { addToast } = useToast();
@@ -17,7 +18,7 @@ export default function ResetPassword() {
   const handleReset = async (e) => {
     e.preventDefault();
     if (!selectedFlat) { addToast('Please select a flat.', 'error'); return; }
-    if (newPass.length < 4) { addToast('Password must be at least 4 characters.', 'error'); return; }
+    if (!isValidLoginPassword(newPass)) { addToast('Enter a password.', 'error'); return; }
     if (newPass !== confirmPass) { addToast('Passwords do not match.', 'error'); return; }
 
     setSaving(true);

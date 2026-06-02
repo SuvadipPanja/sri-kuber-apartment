@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import bcrypt from 'bcryptjs';
+import { validateNewPassword, NEW_PASSWORD_HINT } from '../utils/security';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase';
 import { useToast } from '../context/ToastContext';
@@ -95,7 +96,11 @@ export default function MyAccount() {
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
-    if (form.newPass.length < 4) { addToast('New password must be at least 4 characters.', 'error'); return; }
+    const policy = validateNewPassword(form.newPass, user?.flatNo);
+    if (!policy.valid) {
+      addToast(policy.message, 'error');
+      return;
+    }
     if (form.newPass !== form.confirm) { addToast('New passwords do not match.', 'error'); return; }
 
     setLoadingPwd(true);
@@ -205,10 +210,13 @@ export default function MyAccount() {
         <div className="card-header">
           <span className="card-title"><Icon name="lock" size={16} /> Change Password</span>
         </div>
+        <p className="text-sm text-muted-c mb-2" style={{ lineHeight: 1.5 }}>
+          {NEW_PASSWORD_HINT}
+        </p>
         <form onSubmit={handlePasswordSubmit} id="change-password-form">
           {[
             { key: 'current', label: 'Current Password', placeholder: 'Enter your current password' },
-            { key: 'newPass', label: 'New Password', placeholder: 'Minimum 4 characters' },
+            { key: 'newPass', label: 'New Password', placeholder: 'Min. 8 chars, letters + numbers' },
             { key: 'confirm', label: 'Confirm New Password', placeholder: 'Re-enter new password' },
           ].map(({ key, label, placeholder }) => (
             <div className="form-group" key={key}>

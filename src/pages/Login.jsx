@@ -5,7 +5,7 @@ import Icon from '../components/Icon';
 import {
   sanitizeFlatNo,
   isValidFlatNo,
-  isValidPassword,
+  isValidLoginPassword,
   getLoginLockout,
   recordFailedLogin,
   clearLoginLockout,
@@ -61,8 +61,8 @@ export default function Login() {
       setError('Enter a valid flat number (e.g. 102 or 301).');
       return;
     }
-    if (!isValidPassword(password)) {
-      setError('Password must be between 4 and 128 characters.');
+    if (!isValidLoginPassword(password)) {
+      setError('Please enter your password.');
       return;
     }
 
@@ -89,7 +89,7 @@ export default function Login() {
       <aside className="login-brand" aria-label="Sri Kuber Apartment">
         <div className="login-brand-inner">
           <div className="login-logo" aria-hidden="true">
-            <img src="/favicon.svg" alt="" width="28" height="28" />
+            <img src="/favicon.svg" alt="" width="30" height="30" />
           </div>
           <h1 className="login-title">
             Sri Kuber <em>Apartment</em>
@@ -112,90 +112,104 @@ export default function Login() {
 
       <main className="login-panel">
         <div className="login-card">
-          <div className="login-theme-row">
-            <button
-              type="button"
-              className="login-theme-btn"
-              onClick={toggleTheme}
-              aria-label="Toggle light or dark theme"
-            >
-              <Icon name={isLight ? 'moon' : 'sun'} size={14} />
-              {isLight ? 'Dark' : 'Light'}
-            </button>
-          </div>
-
-          <h2>Sign in</h2>
-          <p className="login-sub">Use your flat number and society password</p>
-
-          <form className="login-form" onSubmit={handleSubmit} noValidate>
-            <div className="form-group">
-              <label className="form-label" htmlFor="flatNo">Flat number</label>
-              <input
-                id="flatNo"
-                type="text"
-                className="form-input"
-                placeholder="e.g. 102, 301"
-                value={flatNo}
-                onChange={(e) => setFlatNo(e.target.value)}
-                autoComplete="username"
-                autoFocus
-              />
+          <div className="login-card-accent" aria-hidden="true" />
+          <div className="login-card-body">
+            <div className="login-card-header">
+              <div>
+                <h2>Sign in</h2>
+                <p className="login-sub">Flat number and society password</p>
+              </div>
+              <button
+                type="button"
+                className="login-theme-btn"
+                onClick={toggleTheme}
+                aria-label="Toggle light or dark theme"
+              >
+                <Icon name={isLight ? 'moon' : 'sun'} size={14} />
+                {isLight ? 'Dark' : 'Light'}
+              </button>
             </div>
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="password">Password</label>
-              <div style={{ position: 'relative' }}>
+            <p className="login-hint">
+              <Icon name="info" size={16} />
+              <span>
+                First time signing in? Your default password is usually your{' '}
+                <strong>flat number</strong> (e.g. 301). You can set a stronger password later in My Account.
+              </span>
+            </p>
+
+            <form className="login-form" onSubmit={handleSubmit} noValidate>
+              <div className="form-group">
+                <label className="form-label" htmlFor="flatNo">
+                  Flat number
+                </label>
                 <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
+                  id="flatNo"
+                  type="text"
+                  inputMode="numeric"
                   className="form-input"
-                  placeholder="Your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="current-password"
-                  style={{ paddingRight: '2.75rem' }}
-                />
-                <button
-                  type="button"
-                  className="btn-icon"
-                  tabIndex={-1}
-                  onClick={() => setShowPassword((s) => !s)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  style={{
-                    position: 'absolute',
-                    right: '0.35rem',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    width: '36px',
-                    height: '36px',
+                  placeholder="e.g. 102, 301"
+                  value={flatNo}
+                  onChange={(e) => {
+                    setFlatNo(e.target.value);
+                    setError('');
                   }}
-                >
-                  <Icon name={showPassword ? 'eyeOff' : 'eye'} size={16} />
-                </button>
+                  autoComplete="username"
+                  autoFocus
+                />
               </div>
-            </div>
 
-            {error && (
-              <div className="alert alert-error" role="alert" style={{ marginBottom: '1rem' }}>
-                <Icon name="warning" size={14} />
-                <span>{error}</span>
+              <div className="form-group">
+                <label className="form-label" htmlFor="password">
+                  Password
+                </label>
+                <div className="login-field-wrap">
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    className="form-input"
+                    placeholder="e.g. your flat number"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setError('');
+                    }}
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    className="login-field-toggle"
+                    tabIndex={-1}
+                    onClick={() => setShowPassword((s) => !s)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    <Icon name={showPassword ? 'eyeOff' : 'eye'} size={18} />
+                  </button>
+                </div>
               </div>
-            )}
 
-            <button type="submit" className="btn btn-primary" disabled={loading} id="login-btn">
-              {loading ? (
-                <>
-                  <span className="spinner sm" />
-                  Signing in…
-                </>
-              ) : (
-                <>
-                  <Icon name="key" size={16} />
-                  Sign in
-                </>
+              {error && (
+                <div className="alert alert-error" role="alert">
+                  <Icon name="warning" size={14} />
+                  <span>{error}</span>
+                </div>
               )}
-            </button>
-          </form>
+
+              <button type="submit" className="btn btn-primary" disabled={loading} id="login-btn">
+                {loading ? (
+                  <>
+                    <span className="spinner sm" />
+                    Signing in…
+                  </>
+                ) : (
+                  <>
+                    <Icon name="key" size={16} />
+                    Sign in
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
 
           <p className="login-footer">
             Developed by <strong>Suvadip Panja</strong>

@@ -16,9 +16,48 @@ export function isValidFlatNo(flatNo) {
   return FLAT_PATTERN.test(flatNo);
 }
 
-export function isValidPassword(password) {
-  return typeof password === 'string' && password.length >= 4 && password.length <= 128;
+/** Login: allow society default passwords (e.g. flat number "301"). */
+export function isValidLoginPassword(password) {
+  return typeof password === 'string' && password.length >= 1 && password.length <= 128;
 }
+
+/** @deprecated Use isValidLoginPassword or validateNewPassword */
+export function isValidPassword(password) {
+  return isValidLoginPassword(password);
+}
+
+/**
+ * Strong policy when a resident sets a new password (not for login).
+ * @returns {{ valid: boolean, message?: string }}
+ */
+export function validateNewPassword(password, flatNo = '') {
+  if (typeof password !== 'string' || password.length < 8) {
+    return {
+      valid: false,
+      message: 'New password must be at least 8 characters.',
+    };
+  }
+  if (password.length > 128) {
+    return { valid: false, message: 'Password must be 128 characters or fewer.' };
+  }
+  if (!/[a-zA-Z]/.test(password)) {
+    return { valid: false, message: 'Include at least one letter.' };
+  }
+  if (!/[0-9]/.test(password)) {
+    return { valid: false, message: 'Include at least one number.' };
+  }
+  const flat = sanitizeFlatNo(flatNo);
+  if (flat && password === flat) {
+    return {
+      valid: false,
+      message: 'Choose a password different from your flat number.',
+    };
+  }
+  return { valid: true };
+}
+
+export const NEW_PASSWORD_HINT =
+  'At least 8 characters with letters and numbers (not your flat number).';
 
 export function getLoginLockout() {
   try {
