@@ -1,111 +1,146 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import bcrypt from 'bcryptjs';
 import { supabase } from '../services/supabase';
+import { sanitizeFlatNo } from '../utils/security';
 
 const AuthContext = createContext(null);
 
-// ============================================================
-// SECURITY: Flat 301 is ALWAYS the Super Admin.
-// This is enforced at CODE level — cannot be changed from DB.
-// Even if the society secretary changes in the future,
-// Flat 301 will always retain Super Admin privileges.
-// ============================================================
 const SUPERADMIN_FLAT = '301';
+const SESSION_KEY = 'ska_user';
+const SESSION_MAX_AGE_MS = 12 * 60 * 60 * 1000;
+
+function readSession() {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed.loginAt && Date.now() - parsed.loginAt > SESSION_MAX_AGE_MS) {
+      sessionStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    sessionStorage.removeItem(SESSION_KEY);
+    return null;
+  }
+}
+
+function writeSession(userData) {
+  const payload = { ...userData, loginAt: Date.now() };
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+  return payload;
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     const initAuth = async () => {
-      const stored = sessionStorage.getItem('ska_user');
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (parsed.flatNo === SUPERADMIN_FLAT) parsed.role = 'superadmin';
-          
-          // Fetch fresh photo_url so user doesn't need to relogin to see updates
-          const { data: owner } = await supabase
-            .from('owners')
-            .select('photo_url')
-            .eq('flat_no', parsed.flatNo)
-            .single();
-            
-          if (owner?.photo_url) parsed.photoUrl = owner.photo_url;
-          
-          setUser(parsed);
-          sessionStorage.setItem('ska_user', JSON.stringify(parsed));
-        } catch {
-          sessionStorage.removeItem('ska_user');
-        }
+      const stored = readSession();
+      if (!stored) {
+        if (!cancelled) setLoading(false);
+        return;
       }
-      setLoading(false);
+
+      if (stored.flatNo === SUPERADMIN_FLAT) stored.role = 'superadmin';
+
+      try {
+        const { data: owner } = await supabase
+          .from('owners')
+          .select('photo_url')
+          .eq('flat_no', stored.flatNo)
+          .maybeSingle();
+
+        if (owner?.photo_url) stored.photoUrl = owner.photo_url;
+      } catch {
+        /* keep cached session */
+      }
+
+      if (!cancelled) {
+        const payload = writeSession(stored);
+        setUser(payload);
+        setLoading(false);
+      }
     };
+
     initAuth();
-    setLoading(false);
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const login = async (flatNo, password) => {
-    const trimmedFlat = flatNo.trim();
+    const trimmedFlat = sanitizeFlatNo(flatNo);
     try {
       const { data, error } = await supabase
         .from('auth_users')
         .select('flat_no, password_hash, role')
         .eq('flat_no', trimmedFlat)
-        .single();
+        .maybeSingle();
 
-      if (error || !data) return { success: false, error: 'Flat number not registered in the system.' };
+      if (error || !data) {
+        return { success: false, error: 'Flat number not registered in the system.' };
+      }
 
       const isMatch = await bcrypt.compare(password, data.password_hash);
-      if (!isMatch) return { success: false, error: 'Incorrect password. Please try again.' };
+      if (!isMatch) {
+        return { success: false, error: 'Incorrect password. Please try again.' };
+      }
 
       const { data: owner } = await supabase
         .from('owners')
         .select('owner_name, photo_url')
         .eq('flat_no', trimmedFlat)
-        .single();
+        .maybeSingle();
 
-      // ALWAYS assign superadmin to flat 301 — regardless of DB value
       const role = trimmedFlat === SUPERADMIN_FLAT ? 'superadmin' : 'resident';
 
-      const userData = {
+      const userData = writeSession({
         flatNo: data.flat_no,
         role,
         ownerName: owner?.owner_name || `Flat ${trimmedFlat}`,
         photoUrl: owner?.photo_url || null,
-      };
+      });
 
       setUser(userData);
-      sessionStorage.setItem('ska_user', JSON.stringify(userData));
       return { success: true };
-    } catch (err) {
-      return { success: false, error: 'Connection error. Please check your internet and try again.' };
+    } catch {
+      return {
+        success: false,
+        error: 'Connection error. Please check your internet and try again.',
+      };
     }
   };
 
   const updateUser = (updates) => {
     if (user) {
-      const updatedUser = { ...user, ...updates };
+      const updatedUser = writeSession({ ...user, ...updates });
       setUser(updatedUser);
-      sessionStorage.setItem('ska_user', JSON.stringify(updatedUser));
     }
   };
 
   const logout = () => {
     setUser(null);
-    sessionStorage.removeItem('ska_user');
+    sessionStorage.removeItem(SESSION_KEY);
   };
 
-  // Superadmin check — also enforced at code level
-  const isSuperAdmin = () => user?.flatNo === SUPERADMIN_FLAT || user?.role === 'superadmin';
+  const isSuperAdmin = () =>
+    user?.flatNo === SUPERADMIN_FLAT || user?.role === 'superadmin';
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, updateUser, isSuperAdmin, SUPERADMIN_FLAT }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, logout, updateUser, isSuperAdmin, SUPERADMIN_FLAT }}
+    >
       {children}
     </AuthContext.Provider>
   );
 }
 
 export function useAuth() {
-  return useContext(AuthContext);
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
 }

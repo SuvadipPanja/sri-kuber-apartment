@@ -15,7 +15,7 @@ const CHART = {
   paid:     '#22c55e',
   pending:  '#f43f5e',
   inactive: '#64748b',
-  expected: '#6366f1',
+  expected: '#0f766e',
   collected:'#22c55e',
   due:      '#f59e0b',
   expense:  '#f43f5e',

@@ -7,7 +7,7 @@ const HUB_STYLES = {
   accent: { '--hub-bg': 'rgba(20, 184, 166, 0.12)', '--hub-color': '#2dd4bf', '--hub-glow': 'rgba(20, 184, 166, 0.08)' },
   blue:   { '--hub-bg': 'var(--primary-glow)', '--hub-color': 'var(--primary-light)', '--hub-glow': 'var(--primary-glow)' },
   gold:   { '--hub-bg': 'rgba(245, 158, 11, 0.12)', '--hub-color': '#fbbf24', '--hub-glow': 'rgba(245, 158, 11, 0.08)' },
-  info:   { '--hub-bg': 'rgba(99, 102, 241, 0.12)', '--hub-color': '#a5b4fc', '--hub-glow': 'var(--primary-glow)' },
+  info:   { '--hub-bg': 'rgba(15, 118, 110, 0.12)', '--hub-color': '#5eead4', '--hub-glow': 'var(--primary-glow)' },
 };
 
 export default function AdminHubCard({ title, description, path, icon, color = 'blue' }) {
