@@ -145,12 +145,22 @@
 }
 
 @media (max-width: 480px) {
+  .page-hero {
+    padding: 0.55rem 0.75rem;
+    margin-bottom: 0.65rem;
+  }
+
   .page-hero h1 {
-    font-size: 1.15rem;
+    font-size: 1rem;
   }
 
   .page-hero-sub {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
+  }
+
+  .page-hero-actions .btn {
+    min-height: 40px;
+    width: 100%;
   }
 
   .modal-footer .btn {

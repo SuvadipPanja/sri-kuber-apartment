@@ -11,7 +11,7 @@ export default function PageShell({ icon, title, subtitle, actions, children, cl
           <div className="page-hero-main">
             {icon && (
               <div className="page-hero-icon" aria-hidden>
-                <Icon name={icon} size={26} />
+                <Icon name={icon} size={20} />
               </div>
             )}
             <div className="page-hero-text">
