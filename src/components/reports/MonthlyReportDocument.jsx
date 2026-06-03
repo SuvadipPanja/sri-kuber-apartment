@@ -52,37 +52,30 @@ export default function MonthlyReportDocument({
     if (!fitOnePage || !innerRef.current) return;
 
     const el = innerRef.current;
-    const SCREEN_BASE = 14;
+    /** A4 printable height (~297mm − margins) at 96dpi */
+    const getMaxH = () => (window.matchMedia('print').matches ? 1020 : 1000);
 
-    const fit = (forPrint = false) => {
-      const isPrint = forPrint || window.matchMedia('print').matches;
-
-      if (!isPrint) {
-        el.style.setProperty('--mr-base', `${SCREEN_BASE}px`);
-        return;
-      }
-
-      el.style.fontSize = '';
-      const maxH = 1050;
-      let size = rowCount > 12 ? 9 : rowCount > 8 ? 9.5 : rowCount > 5 ? 10 : 10.5;
+    const fit = () => {
+      const maxH = getMaxH();
+      let size = rowCount > 14 ? 8 : rowCount > 10 ? 8.5 : rowCount > 7 ? 9 : 9.5;
       el.style.setProperty('--mr-base', `${size}px`);
+
       let guard = 0;
-      while (el.scrollHeight > maxH && size > 6 && guard < 20) {
-        size -= 0.4;
+      while (el.scrollHeight > maxH && size > 6.5 && guard < 30) {
+        size -= 0.2;
         el.style.setProperty('--mr-base', `${size}px`);
         guard += 1;
       }
     };
 
-    const onBeforePrint = () => fit(true);
-    const onAfterPrint = () => fit(false);
-
     fit();
-    window.addEventListener('beforeprint', onBeforePrint);
-    window.addEventListener('afterprint', onAfterPrint);
+    window.addEventListener('resize', fit);
+    window.addEventListener('beforeprint', fit);
+    window.addEventListener('afterprint', fit);
     return () => {
-      window.removeEventListener('beforeprint', onBeforePrint);
-      window.removeEventListener('afterprint', onAfterPrint);
+      window.removeEventListener('resize', fit);
+      window.removeEventListener('beforeprint', fit);
+      window.removeEventListener('afterprint', fit);
     };
   }, [fitOnePage, rowCount, month, year, dues.length, monthExpenses.length]);
 
@@ -103,12 +96,14 @@ export default function MonthlyReportDocument({
         <div className="mr-section-bar financial">💰 Financial Summary</div>
         <div className="mr-section-body">
           <div className="mr-fin-row">
-            <span className="mr-fin-label">Previous Month Carry Forward</span>
+            <span className="mr-fin-label">
+              Previous Month Carry Forward
+              {carryForwardLabel && (
+                <span className="mr-fin-subnote-inline">{carryForwardLabel}</span>
+              )}
+            </span>
             <span className="mr-fin-amt neutral">{formatCurrency(carryForward)}</span>
           </div>
-          {carryForwardLabel && (
-            <div className="mr-fin-subnote">{carryForwardLabel}</div>
-          )}
           <div className="mr-fin-row">
             <span className="mr-fin-label"><span className="mr-fin-amt pos">+</span> Maintenance Collection</span>
             <span className="mr-fin-amt pos">{formatCurrency(collected)}</span>
