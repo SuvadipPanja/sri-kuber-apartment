@@ -11,6 +11,29 @@ const fmtDateShort = (str) => {
   return `${day}-${mon}`;
 };
 
+const SCREEN_BASE = 13;
+const PRINT_MAX_H = 1020;
+
+/** @param {'screen'|'print'|'capture'} mode */
+export function applyReportFit(el, rowCount, mode = 'screen') {
+  if (!el) return;
+
+  if (mode === 'screen') {
+    el.style.setProperty('--mr-base', `${SCREEN_BASE}px`);
+    return;
+  }
+
+  let size = rowCount > 14 ? 8.5 : rowCount > 10 ? 9 : rowCount > 7 ? 9.5 : 10;
+  el.style.setProperty('--mr-base', `${size}px`);
+
+  let guard = 0;
+  while (el.scrollHeight > PRINT_MAX_H && size > 6.5 && guard < 30) {
+    size -= 0.2;
+    el.style.setProperty('--mr-base', `${size}px`);
+    guard += 1;
+  }
+}
+
 /**
  * Monthly maintenance statement — matches society PDF/WhatsApp report layout.
  */
@@ -52,30 +75,17 @@ export default function MonthlyReportDocument({
     if (!fitOnePage || !innerRef.current) return;
 
     const el = innerRef.current;
-    /** A4 printable height (~297mm − margins) at 96dpi */
-    const getMaxH = () => (window.matchMedia('print').matches ? 1020 : 1000);
+    const fitScreen = () => applyReportFit(el, rowCount, 'screen');
+    const fitPrint = () => applyReportFit(el, rowCount, 'print');
 
-    const fit = () => {
-      const maxH = getMaxH();
-      let size = rowCount > 14 ? 8 : rowCount > 10 ? 8.5 : rowCount > 7 ? 9 : 9.5;
-      el.style.setProperty('--mr-base', `${size}px`);
-
-      let guard = 0;
-      while (el.scrollHeight > maxH && size > 6.5 && guard < 30) {
-        size -= 0.2;
-        el.style.setProperty('--mr-base', `${size}px`);
-        guard += 1;
-      }
-    };
-
-    fit();
-    window.addEventListener('resize', fit);
-    window.addEventListener('beforeprint', fit);
-    window.addEventListener('afterprint', fit);
+    fitScreen();
+    window.addEventListener('resize', fitScreen);
+    window.addEventListener('beforeprint', fitPrint);
+    window.addEventListener('afterprint', fitScreen);
     return () => {
-      window.removeEventListener('resize', fit);
-      window.removeEventListener('beforeprint', fit);
-      window.removeEventListener('afterprint', fit);
+      window.removeEventListener('resize', fitScreen);
+      window.removeEventListener('beforeprint', fitPrint);
+      window.removeEventListener('afterprint', fitScreen);
     };
   }, [fitOnePage, rowCount, month, year, dues.length, monthExpenses.length]);
 

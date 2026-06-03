@@ -9,7 +9,7 @@ import { shareReportAsImage } from '../utils/shareReportImage';
 import Icon from '../components/Icon';
 import PageShell from '../components/ui/PageShell';
 import MonthYearFilter from '../components/ui/MonthYearFilter';
-import MonthlyReportDocument, { buildReportShareTitle } from '../components/reports/MonthlyReportDocument';
+import MonthlyReportDocument, { buildReportShareTitle, applyReportFit } from '../components/reports/MonthlyReportDocument';
 import { useToast } from '../context/ToastContext';
 
 const MONTHS_ORDER = ['January','February','March','April','May','June',
@@ -72,7 +72,11 @@ export default function PrintableStatement() {
       return;
     }
     setSharing(true);
+    const rowCount = dues.length + monthExpenses.length;
     try {
+      applyReportFit(reportRef.current, rowCount, 'print');
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
       const result = await shareReportAsImage(reportRef.current, {
         title: shareTitle,
         filename: `Monthly-Report-${month}-${year}.png`,
@@ -88,6 +92,7 @@ export default function PrintableStatement() {
       console.error('WhatsApp share failed:', err);
       addToast(err.message || 'Could not share report — try Print/PDF instead', 'error');
     } finally {
+      applyReportFit(reportRef.current, rowCount, 'screen');
       setSharing(false);
     }
   };
