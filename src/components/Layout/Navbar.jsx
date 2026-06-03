@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useConfig } from '../../hooks/useSupabase';
 import Icon from '../Icon';
 import { getInitials } from '../../utils/formatters';
 
@@ -24,8 +23,6 @@ const ROUTE_LABELS = {
 
 export default function Navbar({ collapsed, onMenuToggle }) {
   const { user, logout, isSuperAdmin } = useAuth();
-  const { config } = useConfig();
-  const societyName = config?.society_name || 'Sri Kuber Apartment';
   const navigate = useNavigate();
   const location = useLocation();
   const pathParts = location.pathname.split('/').filter(Boolean);
@@ -71,7 +68,7 @@ export default function Navbar({ collapsed, onMenuToggle }) {
           <Icon name="menu" size={20} />
         </button>
         <nav className="breadcrumb" aria-label="Breadcrumb">
-          <span className="breadcrumb-root">{societyName}</span>
+          <span className="breadcrumb-root">Sri Kuber</span>
           <Icon name="chevronRight" size={12} className="breadcrumb-icon" aria-hidden />
           <span className="breadcrumb-current">{pageLabel}</span>
         </nav>
