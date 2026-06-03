@@ -20,17 +20,9 @@ const infoNav = [
 const adminReportsNav = [
   { label: 'Statement & Reports', icon: 'printer',    path: '/printable-statement' },
 ];
+/** Admin sub-pages are linked from /admin hub only — not duplicated in sidebar */
 const adminNav = [
-  { label: 'Admin Panel',         icon: 'shield',     path: '/admin',             exact: true },
-  { label: 'Manage Payments',     icon: 'money',      path: '/admin/payments' },
-  { label: 'Manage Expenses',     icon: 'receipt',    path: '/admin/expenses' },
-  { label: 'Other Income',        icon: 'income',     path: '/admin/income' },
-  { label: 'Manage Owners',       icon: 'home',       path: '/admin/owners' },
-  { label: 'Manage Notices',      icon: 'notice',     path: '/admin/notices' },
-  { label: 'Manage Complaints',   icon: 'complaint',  path: '/admin/complaints' },
-  { label: 'Manage Contacts',    icon: 'headphone',  path: '/admin/contacts' },
-  { label: 'Society Settings',    icon: 'settings',   path: '/admin/settings' },
-  { label: 'Reset Password',      icon: 'lock',       path: '/admin/reset-password' },
+  { label: 'Admin Panel', icon: 'shield', path: '/admin', exact: true },
 ];
 
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
@@ -71,9 +63,8 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
         {isSuperAdmin() && (
           <>
             <div className="nav-section-title" style={{ color: 'var(--accent)', opacity: 0.8 }}>
-              Super Admin
+              Admin
             </div>
-            <hr className="nav-admin-divider" />
             {adminNav.map(item => <NavItem key={item.path} item={item} />)}
 
             <div className="nav-section-title">Reports</div>
