@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useConfig } from '../hooks/useSupabase';
+import { getSocietyGalleryPhotos } from '../utils/societyGallery';
 import PageShell from '../components/ui/PageShell';
 
 export default function SocietyInfo() {
@@ -8,10 +9,7 @@ export default function SocietyInfo() {
 
   if (loading) return <div className="loading-screen"><div className="loading-logo">SK</div><div className="spinner lg"></div></div>;
 
-  const photos = [
-    { src: '/society_real.jpg', caption: 'Sri Kuber Apartment (Google Maps View)' },
-    { src: config?.society_photo_url || '/society.png', caption: 'Front Elevation' },
-  ];
+  const photos = getSocietyGalleryPhotos(config);
 
   return (
     <PageShell
@@ -20,14 +18,25 @@ export default function SocietyInfo() {
       subtitle="About Sri Kuber Apartment"
     >
       <div className="grid-2 mb-3">
-        {photos.map((photo, i) => (
-          <div key={i} className="gallery-item" style={{ height: '300px', borderRadius: 'var(--r-xl)' }} onClick={() => setLightbox(photo.src)}>
-            <img src={photo.src} alt={photo.caption} onError={e => { e.target.style.display = 'none'; }} />
-            <div className="gallery-item-overlay">
-              <span className="gallery-caption">{photo.caption}</span>
-            </div>
+        {photos.length === 0 ? (
+          <div className="card text-center text-muted-c" style={{ gridColumn: '1 / -1', padding: '2rem' }}>
+            No society photos have been added yet.
           </div>
-        ))}
+        ) : (
+          photos.map((photo) => (
+            <div
+              key={photo.src + photo.caption}
+              className="gallery-item"
+              style={{ height: '300px', borderRadius: 'var(--r-xl)' }}
+              onClick={() => setLightbox(photo.src)}
+            >
+              <img src={photo.src} alt={photo.caption} onError={e => { e.target.style.display = 'none'; }} />
+              <div className="gallery-item-overlay">
+                <span className="gallery-caption">{photo.caption}</span>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {lightbox && (

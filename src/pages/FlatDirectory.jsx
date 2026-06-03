@@ -1,11 +1,9 @@
 import { useSupabaseTable } from '../hooks/useSupabase';
-import { useAuth } from '../context/AuthContext';
 import { getInitials } from '../utils/formatters';
 import Icon from '../components/Icon';
 import PageShell from '../components/ui/PageShell';
 
 export default function FlatDirectory() {
-  const { isSuperAdmin } = useAuth();
   const { data: rawOwners, loading } = useSupabaseTable('owners', q => q.order('flat_no'));
   const activeOwners = rawOwners.filter(o => o.active);
   const inactiveOwners = rawOwners.filter(o => !o.active);
@@ -33,9 +31,6 @@ export default function FlatDirectory() {
           <div className="fw-bold text-white text-base truncate mb-1">{owner.owner_name}</div>
           <div className="flex items-center gap-1 flex-wrap">
             <span className="badge badge-primary" style={{ fontSize: '0.65rem' }}>Flat {owner.flat_no}</span>
-            {isSuperAdmin() && (
-              <span className="badge badge-accent" style={{ fontSize: '0.65rem' }}>₹{owner.monthly_charge}/mo</span>
-            )}
             {owner.notes && <span className="badge badge-gold" style={{ fontSize: '0.65rem' }}>{owner.notes}</span>}
           </div>
         </div>

@@ -52,10 +52,19 @@ export default function MonthlyReportDocument({
     if (!fitOnePage || !innerRef.current) return;
 
     const el = innerRef.current;
-    const fit = () => {
+    const SCREEN_BASE = 14;
+
+    const fit = (forPrint = false) => {
+      const isPrint = forPrint || window.matchMedia('print').matches;
+
+      if (!isPrint) {
+        el.style.setProperty('--mr-base', `${SCREEN_BASE}px`);
+        return;
+      }
+
       el.style.fontSize = '';
-      const maxH = window.matchMedia('print').matches ? 1050 : 1100;
-      let size = rowCount > 12 ? 8.5 : rowCount > 8 ? 9 : rowCount > 5 ? 9.5 : 10;
+      const maxH = 1050;
+      let size = rowCount > 12 ? 9 : rowCount > 8 ? 9.5 : rowCount > 5 ? 10 : 10.5;
       el.style.setProperty('--mr-base', `${size}px`);
       let guard = 0;
       while (el.scrollHeight > maxH && size > 6 && guard < 20) {
@@ -65,12 +74,15 @@ export default function MonthlyReportDocument({
       }
     };
 
+    const onBeforePrint = () => fit(true);
+    const onAfterPrint = () => fit(false);
+
     fit();
-    window.addEventListener('resize', fit);
-    window.addEventListener('beforeprint', fit);
+    window.addEventListener('beforeprint', onBeforePrint);
+    window.addEventListener('afterprint', onAfterPrint);
     return () => {
-      window.removeEventListener('resize', fit);
-      window.removeEventListener('beforeprint', fit);
+      window.removeEventListener('beforeprint', onBeforePrint);
+      window.removeEventListener('afterprint', onAfterPrint);
     };
   }, [fitOnePage, rowCount, month, year, dues.length, monthExpenses.length]);
 
@@ -80,11 +92,11 @@ export default function MonthlyReportDocument({
         <div className="mr-header-icon" aria-hidden>🏠</div>
         <h1 className="mr-header-title">{societyName.toUpperCase()}</h1>
         <p className="mr-header-sub">Monthly Maintenance Statement</p>
-        <div className="mr-header-meta">
-          <span className="mr-month-pill">📅 Month: {month} {year}</span>
-          <span>Generated: {generatedOn}</span>
-        </div>
       </header>
+      <div className="mr-info-bar">
+        <span className="mr-month-pill">📅 Month: {month} {year}</span>
+        <span>Generated: {generatedOn}</span>
+      </div>
 
       {/* Financial Summary */}
       <section>
@@ -95,9 +107,7 @@ export default function MonthlyReportDocument({
             <span className="mr-fin-amt neutral">{formatCurrency(carryForward)}</span>
           </div>
           {carryForwardLabel && (
-            <div style={{ fontSize: '0.75em', color: '#718096', padding: '0 0.85em 0.35em' }}>
-              {carryForwardLabel}
-            </div>
+            <div className="mr-fin-subnote">{carryForwardLabel}</div>
           )}
           <div className="mr-fin-row">
             <span className="mr-fin-label"><span className="mr-fin-amt pos">+</span> Maintenance Collection</span>
@@ -149,7 +159,7 @@ export default function MonthlyReportDocument({
                         {d.paid ? (
                           <span className="mr-status-paid">✅ Paid</span>
                         ) : (
-                          <span style={{ color: '#c53030', fontWeight: 700 }}>❌ Pending</span>
+                          <span className="mr-status-pending">❌ Pending</span>
                         )}
                       </td>
                     </tr>

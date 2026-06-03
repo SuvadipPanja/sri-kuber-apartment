@@ -1,0 +1,16 @@
+---
+description: Auto-commit and push to main after completing user-requested changes
+alwaysApply: true
+---
+
+# Auto deploy (Vercel via GitHub main)
+
+When the user asks for a feature, fix, or UI change in this project:
+
+1. Complete the implementation and verify build (`npm run build`) when practical.
+2. **Do not ask** whether to commit, push, or deploy — the user has approved automatic deploy.
+3. After meaningful completed work, commit relevant files and `git push origin main` so Vercel redeploys.
+4. Do not commit secrets (`.env`, credentials). Skip unrelated local-only folders (e.g. `.claude/`).
+5. Briefly tell the user deploy was pushed; mention any one-time Supabase/manual steps still required (migrations, buckets).
+
+Only skip auto-deploy when the user explicitly says not to push, or when there are no code changes to ship.

@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../services/supabase';
 import { useConfig } from '../../hooks/useSupabase';
 import { useToast } from '../../context/ToastContext';
-import { MONTHS } from '../../utils/formatters';
+import { MONTHS, generateId } from '../../utils/formatters';
+import { normalizeGallery, galleryToPayload } from '../../utils/societyGallery';
+import { uploadSocietyPhoto, deleteSocietyPhoto } from '../../utils/uploadSocietyPhoto';
+import Icon from '../../components/Icon';
 import PageShell from '../../components/ui/PageShell';
 
 export default function SocietySettings() {
@@ -13,6 +16,9 @@ export default function SocietySettings() {
   const [cfMonth, setCfMonth] = useState('');
   const [cfYear, setCfYear] = useState(2026);
   const [cfAmount, setCfAmount] = useState(0);
+  const [galleryBusy, setGalleryBusy] = useState(null);
+  const addPhotoRef = useRef(null);
+  const replacePhotoRefs = useRef({});
 
   useEffect(() => {
     if (config && !form) {
@@ -28,11 +34,102 @@ export default function SocietySettings() {
         announcement: config.announcement || '',
         contactEmail: config.contact_email || '',
         contactPhone: config.contact_phone || '',
-        societyPhotoUrl: config.society_photo_url || '',
+        gallery: normalizeGallery(config),
         carryForward: config.carry_forward || {},
       });
     }
   }, [config]);
+
+  const persistGallery = async (gallery, toastMsg) => {
+    const payload = {
+      society_gallery: galleryToPayload(gallery),
+      society_photo_url: gallery[0]?.url || '',
+      updated_at: new Date().toISOString(),
+    };
+    const { error } = await supabase.from('config').update(payload).eq('id', 1);
+    if (error) throw error;
+    setForm((f) => ({ ...f, gallery }));
+    refetch();
+    if (toastMsg) addToast(toastMsg, 'success');
+  };
+
+  const handleAddGalleryPhoto = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !form) return;
+    e.target.value = '';
+
+    const id = generateId('GAL');
+    setGalleryBusy(id);
+    try {
+      const url = await uploadSocietyPhoto(file, id);
+      const next = [
+        ...form.gallery,
+        { id, url, caption: 'Society Photo' },
+      ];
+      await persistGallery(next, 'Photo added to society gallery.');
+    } catch (err) {
+      addToast('Error: ' + err.message, 'error');
+    } finally {
+      setGalleryBusy(null);
+    }
+  };
+
+  const handleReplaceGalleryPhoto = async (photoId, e) => {
+    const file = e.target.files?.[0];
+    if (!file || !form) return;
+    e.target.value = '';
+
+    setGalleryBusy(photoId);
+    try {
+      const url = await uploadSocietyPhoto(file, photoId);
+      const prev = form.gallery.find((p) => p.id === photoId);
+      if (prev?.url) await deleteSocietyPhoto(prev.url);
+
+      const next = form.gallery.map((p) =>
+        p.id === photoId ? { ...p, url } : p
+      );
+      await persistGallery(next, 'Photo updated.');
+    } catch (err) {
+      addToast('Error: ' + err.message, 'error');
+    } finally {
+      setGalleryBusy(null);
+    }
+  };
+
+  const handleDeleteGalleryPhoto = async (photoId) => {
+    if (!form) return;
+    const photo = form.gallery.find((p) => p.id === photoId);
+    if (!photo) return;
+    if (!confirm('Remove this photo from the Society Info page?')) return;
+
+    setGalleryBusy(photoId);
+    try {
+      await deleteSocietyPhoto(photo.url);
+      const next = form.gallery.filter((p) => p.id !== photoId);
+      await persistGallery(next, 'Photo removed.');
+    } catch (err) {
+      addToast('Error: ' + err.message, 'error');
+    } finally {
+      setGalleryBusy(null);
+    }
+  };
+
+  const handleGalleryCaptionBlur = async (photoId, caption) => {
+    if (!form) return;
+    const trimmed = caption.trim() || 'Society Photo';
+    const current = form.gallery.find((p) => p.id === photoId);
+    if (!current || current.caption === trimmed) return;
+
+    const next = form.gallery.map((p) =>
+      p.id === photoId ? { ...p, caption: trimmed } : p
+    );
+    setForm((f) => ({ ...f, gallery: next }));
+    try {
+      await persistGallery(next);
+    } catch (err) {
+      addToast('Error saving caption: ' + err.message, 'error');
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -49,7 +146,8 @@ export default function SocietySettings() {
         announcement: form.announcement,
         contact_email: form.contactEmail,
         contact_phone: form.contactPhone,
-        society_photo_url: form.societyPhotoUrl,
+        society_gallery: galleryToPayload(form.gallery),
+        society_photo_url: form.gallery[0]?.url || '',
         carry_forward: form.carryForward,
         updated_at: new Date().toISOString(),
       };
@@ -146,13 +244,110 @@ export default function SocietySettings() {
             </div>
           </div>
           <div className="form-group">
-            <label className="form-label">Society Photo URL</label>
-            <input type="url" className="form-input" placeholder="https://... direct image link" value={form.societyPhotoUrl} onChange={e => setForm(f => ({ ...f, societyPhotoUrl: e.target.value }))} id="settings-photo" />
-          </div>
-          <div className="form-group">
             <label className="form-label">Announcement</label>
             <textarea className="form-textarea" rows={3} value={form.announcement} onChange={e => setForm(f => ({ ...f, announcement: e.target.value }))} id="settings-announcement" />
           </div>
+        </div>
+
+        {/* Society Gallery */}
+        <div className="card" style={{ gridColumn: '1 / -1' }}>
+          <h3 style={{ fontSize: '1rem', marginBottom: '0.35rem' }}>📷 Society Gallery Photos</h3>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.25rem' }}>
+            These images appear on the Society Info page. Add, change, or remove photos — JPG, PNG, WebP or GIF, max 3 MB each.
+          </p>
+
+          {form.gallery.length === 0 ? (
+            <div className="alert alert-info" style={{ marginBottom: '1rem' }}>
+              No photos yet. Add at least one image for residents to see on Society Info.
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
+              {form.gallery.map((photo) => (
+                <div key={photo.id} className="card" style={{ padding: '0.75rem', margin: 0 }}>
+                  <div
+                    style={{
+                      height: 160,
+                      borderRadius: 'var(--r-lg)',
+                      overflow: 'hidden',
+                      background: 'var(--bg-subtle)',
+                      marginBottom: '0.75rem',
+                      position: 'relative',
+                    }}
+                  >
+                    <img
+                      src={photo.url}
+                      alt={photo.caption}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      onError={(e) => { e.target.style.opacity = '0.35'; }}
+                    />
+                    {galleryBusy === photo.id && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          background: 'rgba(0,0,0,0.45)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#fff',
+                          fontSize: '0.85rem',
+                        }}
+                      >
+                        <span className="spinner" style={{ width: 22, height: 22, marginRight: 8 }} />
+                        Uploading…
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+                    <label className="form-label">Caption</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      defaultValue={photo.caption}
+                      onBlur={(e) => handleGalleryCaptionBlur(photo.id, e.target.value)}
+                      disabled={galleryBusy === photo.id}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <label className="btn btn-ghost btn-sm" style={{ cursor: 'pointer', flex: 1 }}>
+                      <Icon name="camera" size={14} /> Change
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        hidden
+                        ref={(el) => { replacePhotoRefs.current[photo.id] = el; }}
+                        onChange={(ev) => handleReplaceGalleryPhoto(photo.id, ev)}
+                        disabled={galleryBusy === photo.id}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      style={{ color: 'var(--danger)' }}
+                      onClick={() => handleDeleteGalleryPhoto(photo.id)}
+                      disabled={galleryBusy === photo.id}
+                    >
+                      <Icon name="trash" size={14} /> Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <label className="btn btn-accent" style={{ cursor: 'pointer' }}>
+            <Icon name="plus" size={14} /> Add Photo
+            <input
+              ref={addPhotoRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              hidden
+              onChange={handleAddGalleryPhoto}
+              disabled={!!galleryBusy}
+            />
+          </label>
         </div>
 
         {/* Carry Forward */}

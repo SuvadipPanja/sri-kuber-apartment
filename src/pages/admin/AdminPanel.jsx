@@ -10,7 +10,7 @@ const adminCards = [
   { title: 'Manage Notices', icon: 'notice', desc: 'Publish and manage society notices', path: '/admin/notices', color: 'gold' },
   { title: 'Manage Complaints', icon: 'complaint', desc: 'Review and resolve resident complaints', path: '/admin/complaints', color: 'red' },
   { title: 'Manage Contacts', icon: 'headphone', desc: 'Emergency and service contact directory', path: '/admin/contacts', color: 'accent' },
-  { title: 'Society Settings', icon: 'settings', desc: 'Society info, announcement, carry forward', path: '/admin/settings', color: 'gold' },
+  { title: 'Society Settings', icon: 'settings', desc: 'Society info, gallery photos, announcement, carry forward', path: '/admin/settings', color: 'gold' },
   { title: 'Reset Password', icon: 'lock', desc: 'Reset password for any flat owner', path: '/admin/reset-password', color: 'info' },
 ];
 
