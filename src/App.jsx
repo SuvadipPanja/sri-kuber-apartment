@@ -31,6 +31,7 @@ import ManageComplaints from './pages/admin/ManageComplaints';
 import ManageContacts from './pages/admin/ManageContacts';
 import SocietySettings from './pages/admin/SocietySettings';
 import ResetPassword from './pages/admin/ResetPassword';
+import ActivityReport from './pages/admin/ActivityReport';
 
 // Route wrappers
 const ProtectedRoute = ({ children }) => {
@@ -81,6 +82,7 @@ function AppRoutes() {
         <Route path="admin/contacts" element={<AdminRoute><ManageContacts /></AdminRoute>} />
         <Route path="admin/settings" element={<AdminRoute><SocietySettings /></AdminRoute>} />
         <Route path="admin/reset-password" element={<AdminRoute><ResetPassword /></AdminRoute>} />
+        <Route path="admin/activity-report" element={<AdminRoute><ActivityReport /></AdminRoute>} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

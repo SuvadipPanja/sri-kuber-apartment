@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
+import { logUserAction } from '../services/activityLog';
 import { usePeriodFilter } from '../hooks/usePeriodFilter';
 import {
   buildPendingDues, totalCollection, totalExpenses,
@@ -28,6 +30,7 @@ function mapOwner(o)   { return { ...o, flatNo: o.flat_no, ownerName: o.owner_na
 
 export default function PrintableStatement() {
   const { addToast } = useToast();
+  const { user } = useAuth();
   const { config } = useConfig();
   const { data: rawOwners }   = useSupabaseTable('owners');
   const { data: rawPayments } = useSupabaseTable('payments');
@@ -64,7 +67,12 @@ export default function PrintableStatement() {
   const generatedOn = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
   const shareTitle = buildReportShareTitle(month, year);
 
-  const handlePrint = () => window.print();
+  const handlePrint = () => {
+    if (user?.activitySessionId) {
+      logUserAction(user.activitySessionId, user, 'Printed monthly statement', { month, year }, '/printable-statement');
+    }
+    window.print();
+  };
 
   const handleWhatsAppShare = async () => {
     if (!reportRef.current) {
@@ -82,6 +90,9 @@ export default function PrintableStatement() {
         filename: `Monthly-Report-${month}-${year}.png`,
       });
       if (result.method === 'cancelled') return;
+      if (user?.activitySessionId) {
+        logUserAction(user.activitySessionId, user, 'Shared statement via WhatsApp', { month, year }, '/printable-statement');
+      }
       addToast(
         result.method === 'share'
           ? 'Select WhatsApp in the share menu to send the report image'

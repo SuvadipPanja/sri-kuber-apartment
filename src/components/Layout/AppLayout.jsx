@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import ActivityTracker from '../ActivityTracker';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 
@@ -18,6 +19,7 @@ export default function AppLayout() {
 
   return (
     <div className="app-layout">
+      <ActivityTracker />
       {/* Mobile backdrop */}
       {mobileOpen && (
         <div

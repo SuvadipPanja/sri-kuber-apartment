@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import bcrypt from 'bcryptjs';
 import { supabase } from '../services/supabase';
 import { sanitizeFlatNo } from '../utils/security';
+import { startUserSession, endUserSession } from '../services/activityLog';
 
 const AuthContext = createContext(null);
 
@@ -98,11 +99,18 @@ export function AuthProvider({ children }) {
 
       const role = trimmedFlat === SUPERADMIN_FLAT ? 'superadmin' : 'resident';
 
+      const sessionId = await startUserSession({
+        flatNo: data.flat_no,
+        ownerName: owner?.owner_name || `Flat ${trimmedFlat}`,
+        role,
+      });
+
       const userData = writeSession({
         flatNo: data.flat_no,
         role,
         ownerName: owner?.owner_name || `Flat ${trimmedFlat}`,
         photoUrl: owner?.photo_url || null,
+        activitySessionId: sessionId,
       });
 
       setUser(userData);
@@ -123,6 +131,9 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
+    if (user?.activitySessionId) {
+      endUserSession(user.activitySessionId, user).catch(() => {});
+    }
     setUser(null);
     sessionStorage.removeItem(SESSION_KEY);
   };

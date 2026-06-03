@@ -3,33 +3,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Icon from '../Icon';
 import { getInitials } from '../../utils/formatters';
-
-const ROUTE_LABELS = {
-  dashboard: 'Dashboard',
-  'monthly-collection': 'Collection & Dues',
-  'pending-dues': 'Collection & Dues',
-  'my-payments': 'My Payments',
-  expenses: 'Expenses',
-  'other-income': 'Other Income',
-  'society-info': 'Society Info',
-  'flat-directory': 'Flat Directory',
-  'notice-board': 'Notice Board',
-  complaints: 'Complaints',
-  'important-contacts': 'Important Contacts',
-  'my-account': 'My Account',
-  'printable-statement': 'Statement & Reports',
-  admin: 'Admin Panel',
-};
+import { getPageLabel } from '../../utils/routeLabels';
 
 export default function Navbar({ collapsed, onMenuToggle }) {
   const { user, logout, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const pathParts = location.pathname.split('/').filter(Boolean);
-  const pageKey = pathParts[pathParts.length - 1] || 'dashboard';
-  const pageLabel =
-    ROUTE_LABELS[pageKey] ||
-    pageKey.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  const pageLabel = getPageLabel(location.pathname);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const [theme, setTheme] = useState(() => localStorage.getItem('ska_theme') || 'dark');
