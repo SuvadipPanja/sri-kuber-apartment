@@ -15,30 +15,48 @@ function baseEvent(sessionId, user, eventType, label, path = null, details = {})
   };
 }
 
-/** Start a session on successful login. Returns session id. */
+/** Start a session on successful login. */
 export async function startUserSession(user) {
   const sessionId = generateId('SES');
   const now = new Date().toISOString();
+  const row = {
+    flat_no: String(user.flatNo),
+    owner_name: user.ownerName || `Flat ${user.flatNo}`,
+    role: user.role || 'resident',
+  };
 
   try {
     const { error: sessionError } = await supabase.from('user_sessions').insert({
       id: sessionId,
-      flat_no: user.flatNo,
-      owner_name: user.ownerName,
-      role: user.role || 'resident',
+      ...row,
       login_at: now,
     });
     if (sessionError) throw sessionError;
 
     const { error: eventError } = await supabase.from('user_activity_events').insert(
-      baseEvent(sessionId, user, 'login', 'Logged in', '/login', { role: user.role })
+      baseEvent(sessionId, user, 'login', 'Logged in', '/login', { role: row.role })
     );
     if (eventError) throw eventError;
-  } catch (err) {
-    console.warn('Activity log: could not start session', err.message);
-  }
 
-  return sessionId;
+    return { sessionId, ok: true };
+  } catch (err) {
+    console.error('Activity log: could not start session', err);
+    return { sessionId, ok: false, error: err.message || 'Unknown error' };
+  }
+}
+
+/** Quick check for admin diagnostics (tables + RLS). */
+export async function checkActivityTablesReady() {
+  const { error } = await supabase.from('user_sessions').select('id').limit(1);
+  if (!error) return { ok: true };
+  const msg = error.message || '';
+  if (msg.includes('schema cache') || msg.includes('does not exist')) {
+    return { ok: false, reason: 'tables', message: msg };
+  }
+  if (msg.includes('policy') || msg.includes('permission') || msg.includes('RLS')) {
+    return { ok: false, reason: 'rls', message: msg };
+  }
+  return { ok: false, reason: 'other', message: msg };
 }
 
 /** End session on logout. */

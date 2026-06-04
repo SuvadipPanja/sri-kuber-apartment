@@ -6,6 +6,7 @@ import {
   deleteFilteredActivitySessions,
   deleteActivitySessionsBefore,
   deleteAllActivitySessions,
+  checkActivityTablesReady,
 } from '../../services/activityLog';
 import { useToast } from '../../context/ToastContext';
 import Icon from '../../components/Icon';
@@ -42,9 +43,21 @@ export default function ActivityReport() {
   const [loadingEvents, setLoadingEvents] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [deleting, setDeleting] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
+  const [setupIssue, setSetupIssue] = useState(null);
+
+  const runSetupCheck = useCallback(async () => {
+    const check = await checkActivityTablesReady();
+    setSetupIssue(check.ok ? null : check);
+  }, []);
+
+  useEffect(() => {
+    runSetupCheck();
+  }, [runSetupCheck]);
 
   const fetchSessions = useCallback(async () => {
     setLoading(true);
+    setFetchError(null);
     try {
       let q = supabase
         .from('user_sessions')
@@ -66,14 +79,16 @@ export default function ActivityReport() {
       if (error) throw error;
       setSessions(data || []);
       setSelectedIds(new Set());
+      await runSetupCheck();
     } catch (err) {
       console.error(err);
       setSessions([]);
+      setFetchError(err.message);
       addToast('Could not load activity logs: ' + err.message, 'error');
     } finally {
       setLoading(false);
     }
-  }, [flatFilter, dateFrom, dateTo]);
+  }, [flatFilter, dateFrom, dateTo, runSetupCheck]);
 
   useEffect(() => {
     fetchSessions();
@@ -254,6 +269,22 @@ export default function ActivityReport() {
         </button>
       }
     >
+      {setupIssue && (
+        <div className="alert alert-error mb-3">
+          <strong>Activity logging is not working.</strong>
+          <p className="text-sm mt-1 mb-1">
+            {setupIssue.reason === 'tables'
+              ? 'Tables missing — run migration SQL in Supabase (see supabase/migrations/20260603120000_user_activity.sql).'
+              : setupIssue.reason === 'rls'
+                ? 'Row Level Security is blocking access — run RLS policy SQL (see supabase/migrations/20260604120000_user_activity_rls.sql).'
+                : setupIssue.message}
+          </p>
+          <p className="text-sm text-muted-c mb-0">
+            After running SQL: sign out, sign in again, visit 2–3 pages, then click Refresh.
+          </p>
+        </div>
+      )}
+
       <div className="alert alert-warning mb-3" style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
         <Icon name="warning" size={20} style={{ flexShrink: 0, marginTop: 2 }} />
         <div>
@@ -337,10 +368,20 @@ export default function ActivityReport() {
         <div className="flex-center" style={{ padding: '3rem' }}>
           <div className="spinner" style={{ width: 40, height: 40 }} />
         </div>
+      ) : fetchError ? (
+        <div className="card text-center text-danger-c" style={{ padding: '2.5rem' }}>
+          <Icon name="warning" size={32} style={{ marginBottom: '0.75rem' }} />
+          <p className="fw-medium">Could not load logs</p>
+          <p className="text-sm mt-1">{fetchError}</p>
+        </div>
       ) : sessions.length === 0 ? (
         <div className="card text-center text-muted-c" style={{ padding: '2.5rem' }}>
           <Icon name="info" size={32} style={{ marginBottom: '0.75rem', opacity: 0.5 }} />
-          <p>No activity sessions found. Logs appear after users sign in, or you have deleted all records.</p>
+          <p>No sessions in the database yet.</p>
+          <p className="text-sm mt-1">
+            Sign out → sign in again → open Dashboard and 2 other pages → Refresh here.
+            {setupIssue ? ' Fix the red setup message above first.' : ''}
+          </p>
         </div>
       ) : (
         <div className="table-wrapper">

@@ -61,7 +61,16 @@ export function AuthProvider({ children }) {
       }
 
       if (!cancelled) {
-        const payload = writeSession(stored);
+        let activitySessionId = stored.activitySessionId;
+        if (!activitySessionId) {
+          const started = await startUserSession({
+            flatNo: stored.flatNo,
+            ownerName: stored.ownerName,
+            role: stored.role,
+          });
+          activitySessionId = started.sessionId;
+        }
+        const payload = writeSession({ ...stored, activitySessionId });
         setUser(payload);
         setLoading(false);
       }
@@ -99,8 +108,8 @@ export function AuthProvider({ children }) {
 
       const role = trimmedFlat === SUPERADMIN_FLAT ? 'superadmin' : 'resident';
 
-      const sessionId = await startUserSession({
-        flatNo: data.flat_no,
+      const started = await startUserSession({
+        flatNo: String(data.flat_no),
         ownerName: owner?.owner_name || `Flat ${trimmedFlat}`,
         role,
       });
@@ -110,11 +119,15 @@ export function AuthProvider({ children }) {
         role,
         ownerName: owner?.owner_name || `Flat ${trimmedFlat}`,
         photoUrl: owner?.photo_url || null,
-        activitySessionId: sessionId,
+        activitySessionId: started.sessionId,
       });
 
       setUser(userData);
-      return { success: true };
+      return {
+        success: true,
+        activityLogOk: started.ok,
+        activityLogError: started.error || null,
+      };
     } catch {
       return {
         success: false,
