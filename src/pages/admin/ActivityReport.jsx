@@ -202,8 +202,13 @@ export default function ActivityReport() {
   };
 
   const handleDeleteAll = async () => {
-    if (!confirm('Delete EVERY activity log? This frees database space but cannot be undone.')) return;
-    if (!confirm('Are you sure? Type OK in your mind — last chance to cancel.')) return;
+    const typed = window.prompt(
+      'This permanently deletes ALL activity logs in Supabase.\n\nType DELETE (capital letters) to confirm:'
+    );
+    if (typed !== 'DELETE') {
+      if (typed !== null) addToast('Cancelled — you must type DELETE exactly.', 'info');
+      return;
+    }
     setDeleting(true);
     try {
       await deleteAllActivitySessions();
@@ -259,7 +264,8 @@ export default function ActivityReport() {
       <div className="card mb-3">
         <h3 className="text-base mb-2">Delete logs</h3>
         <p className="text-sm text-muted-c mb-2">
-          Remove login/logout and activity records from Supabase. Use filters above the table, then delete matching rows.
+          Remove login/logout and activity records from Supabase. Deleted data cannot be restored on the free plan.
+          Without filters, &quot;Delete all on this page&quot; only removes the rows listed below (max 200).
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
           <button

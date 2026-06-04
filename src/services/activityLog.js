@@ -98,9 +98,14 @@ export async function deleteActivitySessions(sessionIds) {
 }
 
 /**
- * Delete sessions matching filters (same rules as Activity Report list).
+ * Delete sessions matching filters. Requires at least one filter so we never wipe the whole table by mistake.
  */
 export async function deleteFilteredActivitySessions({ flatNo, dateFrom, dateTo } = {}) {
+  const hasFilter = !!(flatNo?.trim() || dateFrom || dateTo);
+  if (!hasFilter) {
+    throw new Error('Set a flat number or date filter before deleting by filter.');
+  }
+
   let q = supabase.from('user_sessions').delete();
   if (flatNo?.trim()) q = q.eq('flat_no', flatNo.trim());
   if (dateFrom) q = q.gte('login_at', `${dateFrom}T00:00:00`);
