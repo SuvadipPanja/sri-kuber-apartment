@@ -22,6 +22,7 @@ export const ROUTE_LABELS = {
   settings: 'Society Settings',
   'reset-password': 'Reset Password',
   'activity-report': 'Activity Report',
+  'data-backup': 'Data Backup & Restore',
 };
 
 export function getPageLabel(pathname) {

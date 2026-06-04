@@ -11,6 +11,7 @@ const adminCards = [
   { title: 'Manage Complaints', icon: 'complaint', desc: 'Review and resolve resident complaints', path: '/admin/complaints', color: 'red' },
   { title: 'Manage Contacts', icon: 'headphone', desc: 'Emergency and service contact directory', path: '/admin/contacts', color: 'accent' },
   { title: 'Society Settings', icon: 'settings', desc: 'Society info, gallery photos, announcement, carry forward', path: '/admin/settings', color: 'gold' },
+  { title: 'Data Backup & Restore', icon: 'download', desc: 'Download full ZIP backup, Google Drive, restore if Supabase fails', path: '/admin/data-backup', color: 'green' },
   { title: 'Activity Report', icon: 'eye', desc: 'User login, logout, pages visited, and actions', path: '/admin/activity-report', color: 'info' },
   { title: 'Reset Password', icon: 'lock', desc: 'Reset password for any flat owner', path: '/admin/reset-password', color: 'info' },
 ];

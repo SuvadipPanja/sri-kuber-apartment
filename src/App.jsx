@@ -32,6 +32,7 @@ import ManageContacts from './pages/admin/ManageContacts';
 import SocietySettings from './pages/admin/SocietySettings';
 import ResetPassword from './pages/admin/ResetPassword';
 import ActivityReport from './pages/admin/ActivityReport';
+import DataBackup from './pages/admin/DataBackup';
 
 // Route wrappers
 const ProtectedRoute = ({ children }) => {
@@ -83,6 +84,7 @@ function AppRoutes() {
         <Route path="admin/settings" element={<AdminRoute><SocietySettings /></AdminRoute>} />
         <Route path="admin/reset-password" element={<AdminRoute><ResetPassword /></AdminRoute>} />
         <Route path="admin/activity-report" element={<AdminRoute><ActivityReport /></AdminRoute>} />
+        <Route path="admin/data-backup" element={<AdminRoute><DataBackup /></AdminRoute>} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
