@@ -81,3 +81,42 @@ export async function logUserAction(sessionId, user, label, details = {}, path =
     console.warn('Activity log: action failed', err.message);
   }
 }
+
+/**
+ * Delete one session (activity events removed via ON DELETE CASCADE).
+ */
+export async function deleteActivitySession(sessionId) {
+  const { error } = await supabase.from('user_sessions').delete().eq('id', sessionId);
+  if (error) throw error;
+}
+
+/** Delete multiple sessions by id. */
+export async function deleteActivitySessions(sessionIds) {
+  if (!sessionIds?.length) return;
+  const { error } = await supabase.from('user_sessions').delete().in('id', sessionIds);
+  if (error) throw error;
+}
+
+/**
+ * Delete sessions matching filters (same rules as Activity Report list).
+ */
+export async function deleteFilteredActivitySessions({ flatNo, dateFrom, dateTo } = {}) {
+  let q = supabase.from('user_sessions').delete();
+  if (flatNo?.trim()) q = q.eq('flat_no', flatNo.trim());
+  if (dateFrom) q = q.gte('login_at', `${dateFrom}T00:00:00`);
+  if (dateTo) q = q.lte('login_at', `${dateTo}T23:59:59`);
+  const { error } = await q;
+  if (error) throw error;
+}
+
+/** Delete sessions with login before the given ISO timestamp. */
+export async function deleteActivitySessionsBefore(isoDateTime) {
+  const { error } = await supabase.from('user_sessions').delete().lt('login_at', isoDateTime);
+  if (error) throw error;
+}
+
+/** Delete every session (frees Supabase storage on free tier). */
+export async function deleteAllActivitySessions() {
+  const { error } = await supabase.from('user_sessions').delete().gte('login_at', '1970-01-01T00:00:00');
+  if (error) throw error;
+}
