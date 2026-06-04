@@ -1,8 +1,12 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import bcrypt from 'bcryptjs';
 import { supabase } from '../services/supabase';
 import { sanitizeFlatNo } from '../utils/security';
-import { startUserSession, endUserSession } from '../services/activityLog';
+import {
+  startUserSession,
+  endUserSession,
+  endUserSessionKeepalive,
+} from '../services/activityLog';
 
 const AuthContext = createContext(null);
 
@@ -35,6 +39,7 @@ function writeSession(userData) {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const skipPageHideEndRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -62,7 +67,22 @@ export function AuthProvider({ children }) {
 
       if (!cancelled) {
         let activitySessionId = stored.activitySessionId;
-        if (!activitySessionId) {
+        let sessionStillOpen = false;
+
+        if (activitySessionId) {
+          try {
+            const { data: sess } = await supabase
+              .from('user_sessions')
+              .select('logout_at')
+              .eq('id', activitySessionId)
+              .maybeSingle();
+            sessionStillOpen = !!sess && !sess.logout_at;
+          } catch {
+            sessionStillOpen = false;
+          }
+        }
+
+        if (!activitySessionId || !sessionStillOpen) {
           const started = await startUserSession({
             flatNo: stored.flatNo,
             ownerName: stored.ownerName,
@@ -70,6 +90,7 @@ export function AuthProvider({ children }) {
           });
           activitySessionId = started.sessionId;
         }
+
         const payload = writeSession({ ...stored, activitySessionId });
         setUser(payload);
         setLoading(false);
@@ -81,6 +102,25 @@ export function AuthProvider({ children }) {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!user?.activitySessionId) return undefined;
+
+    const sessionId = user.activitySessionId;
+    const snapshot = {
+      flatNo: user.flatNo,
+      ownerName: user.ownerName,
+    };
+
+    const onPageHide = () => {
+      if (skipPageHideEndRef.current) return;
+      endUserSessionKeepalive(sessionId);
+      endUserSession(sessionId, snapshot).catch(() => {});
+    };
+
+    window.addEventListener('pagehide', onPageHide);
+    return () => window.removeEventListener('pagehide', onPageHide);
+  }, [user?.activitySessionId, user?.flatNo, user?.ownerName]);
 
   const login = async (flatNo, password) => {
     const trimmedFlat = sanitizeFlatNo(flatNo);
@@ -143,12 +183,20 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logout = () => {
-    if (user?.activitySessionId) {
-      endUserSession(user.activitySessionId, user).catch(() => {});
+  const logout = async () => {
+    const sessionId = user?.activitySessionId;
+    const snapshot = user
+      ? { flatNo: user.flatNo, ownerName: user.ownerName, role: user.role }
+      : null;
+
+    skipPageHideEndRef.current = true;
+    if (sessionId && snapshot) {
+      await endUserSession(sessionId, snapshot);
     }
+
     setUser(null);
     sessionStorage.removeItem(SESSION_KEY);
+    skipPageHideEndRef.current = false;
   };
 
   const isSuperAdmin = () =>

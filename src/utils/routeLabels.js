@@ -27,7 +27,9 @@ export const ROUTE_LABELS = {
 
 export function getPageLabel(pathname) {
   const parts = pathname.split('/').filter(Boolean);
-  const key = parts[parts.length - 1] || 'dashboard';
+  if (parts.length === 0) return ROUTE_LABELS.dashboard;
+  if (parts[0] === 'admin' && parts.length === 1) return ROUTE_LABELS.admin;
+  const key = parts[parts.length - 1];
   if (ROUTE_LABELS[key]) return ROUTE_LABELS[key];
   return key.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }

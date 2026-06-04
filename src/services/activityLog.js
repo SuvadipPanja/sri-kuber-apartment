@@ -26,6 +26,8 @@ export async function startUserSession(user) {
   };
 
   try {
+    await closeOpenSessionsForFlat(row.flat_no);
+
     const { error: sessionError } = await supabase.from('user_sessions').insert({
       id: sessionId,
       ...row,
@@ -59,31 +61,82 @@ export async function checkActivityTablesReady() {
   return { ok: false, reason: 'other', message: msg };
 }
 
-/** End session on logout. */
+/** Close any sessions for this flat still marked active (orphans from failed logout / refresh). */
+export async function closeOpenSessionsForFlat(flatNo, exceptSessionId = null) {
+  if (!flatNo) return;
+  const now = new Date().toISOString();
+  let q = supabase
+    .from('user_sessions')
+    .update({ logout_at: now })
+    .eq('flat_no', String(flatNo))
+    .is('logout_at', null);
+  if (exceptSessionId) q = q.neq('id', exceptSessionId);
+  const { error } = await q;
+  if (error) console.warn('Activity log: close open sessions', error.message);
+}
+
+/** End session on logout or tab close. */
 export async function endUserSession(sessionId, user) {
-  if (!sessionId || !user?.flatNo) return;
+  if (!sessionId || !user?.flatNo) return { ok: false };
 
   const now = new Date().toISOString();
   try {
-    await supabase.from('user_sessions').update({ logout_at: now }).eq('id', sessionId);
-    await supabase.from('user_activity_events').insert(
-      baseEvent(sessionId, user, 'logout', 'Logged out', null, {})
+    const { data: updated, error: sessionError } = await supabase
+      .from('user_sessions')
+      .update({ logout_at: now })
+      .eq('id', sessionId)
+      .select('id');
+    if (sessionError) throw sessionError;
+    if (!updated?.length) {
+      console.warn('Activity log: session not found for logout', sessionId);
+    }
+
+    const { error: eventError } = await supabase.from('user_activity_events').insert(
+      baseEvent(sessionId, user, 'logout', 'Logged out', '/login', { ended_at: now })
     );
+    if (eventError) throw eventError;
+
+    return { ok: true, logoutAt: now };
   } catch (err) {
     console.warn('Activity log: could not end session', err.message);
+    return { ok: false, error: err.message };
   }
 }
 
-/** Log a page view (dedupe handled by caller). */
+/** Best-effort session end when the tab closes (fetch keepalive). */
+export function endUserSessionKeepalive(sessionId) {
+  if (!sessionId) return;
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  if (!url || !key) return;
+
+  const now = new Date().toISOString();
+  fetch(`${url}/rest/v1/user_sessions?id=eq.${encodeURIComponent(sessionId)}`, {
+    method: 'PATCH',
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify({ logout_at: now }),
+    keepalive: true,
+  }).catch(() => {});
+}
+
+/** Log a page view. */
 export async function logPageView(sessionId, user, path, label) {
-  if (!sessionId || !user?.flatNo || !path) return;
+  if (!sessionId || !user?.flatNo || !path) return { ok: false };
 
   try {
-    await supabase.from('user_activity_events').insert(
+    const { error } = await supabase.from('user_activity_events').insert(
       baseEvent(sessionId, user, 'page_view', `Viewed: ${label}`, path, {})
     );
+    if (error) throw error;
+    return { ok: true };
   } catch (err) {
-    console.warn('Activity log: page view failed', err.message);
+    console.warn('Activity log: page view failed', path, err.message);
+    return { ok: false, error: err.message };
   }
 }
 

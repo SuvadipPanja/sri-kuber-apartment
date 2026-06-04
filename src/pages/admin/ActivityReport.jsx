@@ -77,7 +77,31 @@ export default function ActivityReport() {
 
       const { data, error } = await q;
       if (error) throw error;
-      setSessions(data || []);
+      const rows = data || [];
+      const openIds = rows.filter((s) => !s.logout_at).map((s) => s.id);
+      if (openIds.length) {
+        const { data: logoutEvents } = await supabase
+          .from('user_activity_events')
+          .select('session_id, created_at')
+          .in('session_id', openIds)
+          .eq('event_type', 'logout')
+          .order('created_at', { ascending: false });
+        const logoutBySession = new Map();
+        for (const ev of logoutEvents || []) {
+          if (!logoutBySession.has(ev.session_id)) {
+            logoutBySession.set(ev.session_id, ev.created_at);
+          }
+        }
+        setSessions(
+          rows.map((s) =>
+            !s.logout_at && logoutBySession.has(s.id)
+              ? { ...s, logout_at: logoutBySession.get(s.id) }
+              : s
+          )
+        );
+      } else {
+        setSessions(rows);
+      }
       setSelectedIds(new Set());
       await runSetupCheck();
     } catch (err) {

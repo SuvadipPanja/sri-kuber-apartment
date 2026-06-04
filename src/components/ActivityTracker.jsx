@@ -5,22 +5,31 @@ import { logPageView } from '../services/activityLog';
 import { getPageLabel } from '../utils/routeLabels';
 
 /**
- * Tracks page views for the current logged-in session.
+ * Tracks page views for the current logged-in session (every route change).
  */
 export default function ActivityTracker() {
   const { user } = useAuth();
   const location = useLocation();
-  const lastPathRef = useRef('');
+  const lastNavKeyRef = useRef(null);
+  const sessionIdRef = useRef(null);
 
   useEffect(() => {
-    if (!user?.activitySessionId) return;
+    const sessionId = user?.activitySessionId;
+    if (!sessionId || !user?.flatNo) return;
+
+    if (sessionIdRef.current !== sessionId) {
+      sessionIdRef.current = sessionId;
+      lastNavKeyRef.current = null;
+    }
+
     const path = location.pathname;
-    if (path === '/login' || path === lastPathRef.current) return;
+    if (path === '/login' || path.startsWith('/login')) return;
 
-    lastPathRef.current = path;
+    const navKey = `${sessionId}:${location.key}:${path}`;
+    if (navKey === lastNavKeyRef.current) return;
+    lastNavKeyRef.current = navKey;
+
     const label = getPageLabel(path);
-    logPageView(user.activitySessionId, user, path, label);
-  }, [location.pathname, user]);
-
-  return null;
+    logPageView(sessionId, user, path, label);
+  }, [location.key, location.pathname, user?.activitySessionId, user?.flatNo, user?.ownerName]);
 }
