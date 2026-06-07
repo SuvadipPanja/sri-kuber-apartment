@@ -23,6 +23,8 @@ function readSession() {
       sessionStorage.removeItem(SESSION_KEY);
       return null;
     }
+    if (parsed.flatNo != null) parsed.flatNo = String(parsed.flatNo);
+    if (String(parsed.flatNo) === SUPERADMIN_FLAT) parsed.role = 'superadmin';
     return parsed;
   } catch {
     sessionStorage.removeItem(SESSION_KEY);
@@ -31,18 +33,54 @@ function readSession() {
 }
 
 function writeSession(userData) {
-  const payload = { ...userData, loginAt: Date.now() };
+  const payload = {
+    ...userData,
+    flatNo: userData.flatNo != null ? String(userData.flatNo) : userData.flatNo,
+    loginAt: Date.now(),
+  };
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(payload));
   return payload;
+}
+
+/** Refresh activity session id in background — never block UI. */
+async function ensureActivitySession(user) {
+  let activitySessionId = user.activitySessionId;
+  let sessionStillOpen = false;
+
+  if (activitySessionId) {
+    try {
+      const { data: sess } = await supabase
+        .from('user_sessions')
+        .select('logout_at')
+        .eq('id', activitySessionId)
+        .maybeSingle();
+      sessionStillOpen = !!sess && !sess.logout_at;
+    } catch {
+      sessionStillOpen = false;
+    }
+  }
+
+  if (!activitySessionId || !sessionStillOpen) {
+    const started = await startUserSession({
+      flatNo: user.flatNo,
+      ownerName: user.ownerName,
+      role: user.role,
+    });
+    activitySessionId = started.sessionId;
+  }
+
+  return activitySessionId;
 }
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const skipPageHideEndRef = useRef(false);
+  const authEpochRef = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
+    const epoch = authEpochRef.current;
 
     const initAuth = async () => {
       const stored = readSession();
@@ -51,7 +89,10 @@ export function AuthProvider({ children }) {
         return;
       }
 
-      if (stored.flatNo === SUPERADMIN_FLAT) stored.role = 'superadmin';
+      if (!cancelled && epoch === authEpochRef.current) {
+        setUser(stored);
+        setLoading(false);
+      }
 
       try {
         const { data: owner } = await supabase
@@ -60,40 +101,18 @@ export function AuthProvider({ children }) {
           .eq('flat_no', stored.flatNo)
           .maybeSingle();
 
-        if (owner?.photo_url) stored.photoUrl = owner.photo_url;
-      } catch {
-        /* keep cached session */
-      }
+        const activitySessionId = await ensureActivitySession(stored);
 
-      if (!cancelled) {
-        let activitySessionId = stored.activitySessionId;
-        let sessionStillOpen = false;
-
-        if (activitySessionId) {
-          try {
-            const { data: sess } = await supabase
-              .from('user_sessions')
-              .select('logout_at')
-              .eq('id', activitySessionId)
-              .maybeSingle();
-            sessionStillOpen = !!sess && !sess.logout_at;
-          } catch {
-            sessionStillOpen = false;
-          }
-        }
-
-        if (!activitySessionId || !sessionStillOpen) {
-          const started = await startUserSession({
-            flatNo: stored.flatNo,
-            ownerName: stored.ownerName,
-            role: stored.role,
+        if (!cancelled && epoch === authEpochRef.current) {
+          const payload = writeSession({
+            ...stored,
+            activitySessionId,
+            photoUrl: owner?.photo_url || stored.photoUrl || null,
           });
-          activitySessionId = started.sessionId;
+          setUser(payload);
         }
-
-        const payload = writeSession({ ...stored, activitySessionId });
-        setUser(payload);
-        setLoading(false);
+      } catch (err) {
+        console.warn('Session refresh failed', err);
       }
     };
 
@@ -115,7 +134,6 @@ export function AuthProvider({ children }) {
     const onPageHide = () => {
       if (skipPageHideEndRef.current) return;
       endUserSessionKeepalive(sessionId);
-      endUserSession(sessionId, snapshot).catch(() => {});
     };
 
     window.addEventListener('pagehide', onPageHide);
@@ -147,26 +165,43 @@ export function AuthProvider({ children }) {
         .maybeSingle();
 
       const role = trimmedFlat === SUPERADMIN_FLAT ? 'superadmin' : 'resident';
+      const flatStr = String(data.flat_no);
 
-      const started = await startUserSession({
-        flatNo: String(data.flat_no),
-        ownerName: owner?.owner_name || `Flat ${trimmedFlat}`,
-        role,
-      });
+      authEpochRef.current += 1;
 
       const userData = writeSession({
-        flatNo: data.flat_no,
+        flatNo: flatStr,
         role,
         ownerName: owner?.owner_name || `Flat ${trimmedFlat}`,
         photoUrl: owner?.photo_url || null,
-        activitySessionId: started.sessionId,
+        activitySessionId: null,
       });
 
       setUser(userData);
+      setLoading(false);
+
+      const loginEpoch = authEpochRef.current;
+
+      startUserSession({
+        flatNo: flatStr,
+        ownerName: userData.ownerName,
+        role,
+      }).then((started) => {
+        if (loginEpoch !== authEpochRef.current) return;
+        const updated = writeSession({
+          ...userData,
+          activitySessionId: started.sessionId,
+        });
+        setUser(updated);
+        if (!started.ok) {
+          console.warn('Activity log failed:', started.error);
+        }
+      });
+
       return {
         success: true,
-        activityLogOk: started.ok,
-        activityLogError: started.error || null,
+        activityLogOk: true,
+        activityLogError: null,
       };
     } catch {
       return {
@@ -189,18 +224,22 @@ export function AuthProvider({ children }) {
       ? { flatNo: user.flatNo, ownerName: user.ownerName, role: user.role }
       : null;
 
+    authEpochRef.current += 1;
     skipPageHideEndRef.current = true;
+
+    setUser(null);
+    sessionStorage.removeItem(SESSION_KEY);
+    setLoading(false);
+
     if (sessionId && snapshot) {
       await endUserSession(sessionId, snapshot);
     }
 
-    setUser(null);
-    sessionStorage.removeItem(SESSION_KEY);
     skipPageHideEndRef.current = false;
   };
 
   const isSuperAdmin = () =>
-    user?.flatNo === SUPERADMIN_FLAT || user?.role === 'superadmin';
+    String(user?.flatNo) === SUPERADMIN_FLAT || user?.role === 'superadmin';
 
   return (
     <AuthContext.Provider

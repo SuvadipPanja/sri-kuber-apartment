@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
 import Icon from '../components/Icon';
 import {
   sanitizeFlatNo,
@@ -21,7 +20,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
   const { login } = useAuth();
-  const { addToast } = useToast();
   const navigate = useNavigate();
   const [theme, setTheme] = useState(
     () => document.documentElement.getAttribute('data-theme') || 'dark'
@@ -74,13 +72,7 @@ export default function Login() {
 
     if (res.success) {
       clearLoginLockout();
-      if (res.activityLogOk === false) {
-        addToast(
-          `Logged in, but activity logging failed: ${res.activityLogError || 'check Supabase tables/RLS'}`,
-          'error'
-        );
-      }
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
       return;
     }
 
