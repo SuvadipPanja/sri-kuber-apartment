@@ -7,6 +7,7 @@ import { formatCurrency } from '../utils/formatters';
 import { getFirstName, getTimeGreeting } from '../utils/greetings';
 import { totalCollection, totalExpenses, totalOtherIncome, calculateNetBalance, getFlatStats, buildPendingDues } from '../utils/calculations';
 import { Link } from 'react-router-dom';
+import { isNoticeActive } from '../utils/notices';
 import Icon from '../components/Icon';
 import PageShell from '../components/ui/PageShell';
 import MonthYearFilter from '../components/ui/MonthYearFilter';
@@ -85,10 +86,7 @@ export default function Dashboard() {
   );
 
   // Re-show banner when admin publishes a new notice (new id)
-  const latestNotice = (() => {
-    const now = new Date();
-    return notices.find(n => !n.expires_at || new Date(n.expires_at) > now) || null;
-  })();
+  const latestNotice = notices.find(isNoticeActive) || null;
 
   useEffect(() => {
     if (latestNotice && dismissedNoticeId && dismissedNoticeId !== latestNotice.id) {

@@ -3,6 +3,7 @@ import { supabase } from '../../services/supabase';
 import { useSupabaseTable } from '../../hooks/useSupabase';
 import { useToast } from '../../context/ToastContext';
 import { formatDate, generateId } from '../../utils/formatters';
+import { isNoticeActive, toNoticeExpiryStorage } from '../../utils/notices';
 import Icon from '../../components/Icon';
 import PageShell from '../../components/ui/PageShell';
 
@@ -28,7 +29,12 @@ export default function ManageNotices() {
     if (!form.title || !form.content) { addToast('Title and content are required.', 'error'); return; }
     setSaving(true);
     try {
-      const payload = { title: form.title, content: form.content, priority: form.priority, expires_at: form.expiresAt || null };
+      const payload = {
+        title: form.title,
+        content: form.content,
+        priority: form.priority,
+        expires_at: toNoticeExpiryStorage(form.expiresAt),
+      };
       let error;
       if (editId) {
         ({ error } = await supabase.from('notices').update(payload).eq('id', editId));
@@ -73,6 +79,7 @@ export default function ManageNotices() {
                   <div className="flex items-center gap-2 mb-1">
                     <strong className="text-white">{n.title}</strong>
                     <span className={`badge ${prBadge[n.priority] || 'badge-info'}`}>{n.priority}</span>
+                    {!isNoticeActive(n) && <span className="badge badge-muted">Expired</span>}
                   </div>
                   <p className="text-sm text-secondary-c mb-1" style={{ whiteSpace: 'pre-wrap' }}>{n.content.length > 150 ? n.content.substring(0, 150) + '...' : n.content}</p>
                   <span className="text-xs text-muted-c">Posted {formatDate(n.created_at)} {n.expires_at ? ` • Expires ${formatDate(n.expires_at)}` : ''}</span>
@@ -114,6 +121,7 @@ export default function ManageNotices() {
                 <div className="form-group">
                   <label className="form-label">Expires On (Optional)</label>
                   <input type="date" className="form-input" value={form.expiresAt} onChange={e => setForm(f => ({ ...f, expiresAt: e.target.value }))} />
+                  <p className="text-xs text-muted-c mt-1">Notice stays visible through the end of this date. Leave blank for no expiry.</p>
                 </div>
               </div>
             </div>

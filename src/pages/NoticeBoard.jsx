@@ -1,5 +1,6 @@
 import { useSupabaseTable } from '../hooks/useSupabase';
 import { formatDate } from '../utils/formatters';
+import { isNoticeActive } from '../utils/notices';
 import Icon from '../components/Icon';
 import PageShell from '../components/ui/PageShell';
 import EmptyState from '../components/ui/EmptyState';
@@ -13,9 +14,8 @@ const PRIORITY_STYLES = {
 export default function NoticeBoard() {
   const { data: notices, loading } = useSupabaseTable('notices', q => q.order('created_at', { ascending: false }));
 
-  // Filter out expired notices
-  const now = new Date();
-  const activeNotices = notices.filter(n => !n.expires_at || new Date(n.expires_at) > now);
+  // Hide notices past their expiry date (valid through end of expiry day)
+  const activeNotices = notices.filter(isNoticeActive);
 
   if (loading) return <div className="loading-screen"><div className="spinner lg"></div></div>;
 
