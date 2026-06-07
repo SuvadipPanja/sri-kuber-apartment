@@ -5,6 +5,7 @@ import { usePeriodFilter } from '../../hooks/usePeriodFilter';
 import { useToast } from '../../context/ToastContext';
 import { formatCurrency, formatDate, MONTHS, PAYMENT_MODES, generateId, getCurrentMonth, getCurrentYear } from '../../utils/formatters';
 import PageShell from '../../components/ui/PageShell';
+import Modal from '../../components/ui/Modal';
 import MonthYearFilter from '../../components/ui/MonthYearFilter';
 
 function mapPayment(p) { return { ...p, flatNo: p.flat_no, ownerName: p.owner_name, amountPaid: p.amount_paid, paymentDate: p.payment_date, paymentMode: p.payment_mode }; }
@@ -129,9 +130,7 @@ export default function ManagePayments() {
       </div>
 
       {/* Modal */}
-      {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-box" onClick={e => e.stopPropagation()}>
+      <Modal open={showModal} onClose={() => setShowModal(false)}>
             <div className="modal-header">
               <div className="modal-title">{editId ? '✏️ Edit Payment' : '➕ Add Payment'}</div>
               <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
@@ -190,9 +189,7 @@ export default function ManagePayments() {
                 {saving ? <><span className="spinner" style={{ width: 14, height: 14 }} /> Saving...</> : '💾 Save'}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+      </Modal>
     </PageShell>
   );
 }

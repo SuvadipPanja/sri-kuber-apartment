@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext';
 import { formatDate } from '../../utils/formatters';
 import Icon from '../../components/Icon';
 import PageShell from '../../components/ui/PageShell';
+import Modal from '../../components/ui/Modal';
 
 const STATUS_BADGE = { open: 'badge-danger', in_progress: 'badge-warning', resolved: 'badge-success' };
 const STATUS_LABEL = { open: 'Open', in_progress: 'In Progress', resolved: 'Resolved' };
@@ -109,9 +110,7 @@ export default function ManageComplaints() {
           </div>
         )}
 
-      {showModal && selected && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-box" onClick={e => e.stopPropagation()}>
+      <Modal open={showModal && !!selected} onClose={() => setShowModal(false)}>
             <div className="modal-header">
               <div className="modal-title"><Icon name="edit" size={18} /> Respond to Complaint</div>
               <button className="modal-close" onClick={() => setShowModal(false)}><Icon name="x" size={16} /></button>
@@ -143,9 +142,7 @@ export default function ManageComplaints() {
                 {saving ? <><span className="spinner sm" /> Saving...</> : <><Icon name="check" size={16} /> Update</>}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+      </Modal>
     </PageShell>
   );
 }

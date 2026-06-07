@@ -7,6 +7,7 @@ import { formatCurrency, formatDate, MONTHS, EXPENSE_TYPES, generateId, getCurre
 import { uploadExpenseAttachment } from '../../utils/uploadExpenseAttachment';
 import Icon from '../../components/Icon';
 import PageShell from '../../components/ui/PageShell';
+import Modal from '../../components/ui/Modal';
 import MonthYearFilter from '../../components/ui/MonthYearFilter';
 
 function mapExpense(e) {
@@ -254,9 +255,7 @@ export default function ManageExpenses() {
       )}
 
       {/* Add / Edit Modal */}
-      {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-box wide" onClick={e => e.stopPropagation()} style={{ maxHeight: '90vh' }}>
+      <Modal open={showModal} onClose={() => setShowModal(false)} wide>
             <div className="modal-header">
               <div className="modal-title">
                 <Icon name={editId ? 'edit' : 'plus'} size={18} />
@@ -390,9 +389,7 @@ export default function ManageExpenses() {
                 {saving ? <><span className="spinner sm" /> Saving…</> : <><Icon name="check" size={16} /> Save Expense</>}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+      </Modal>
     </PageShell>
   );
 }

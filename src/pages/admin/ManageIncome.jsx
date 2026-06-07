@@ -5,6 +5,7 @@ import { usePeriodFilter } from '../../hooks/usePeriodFilter';
 import { useToast } from '../../context/ToastContext';
 import { formatCurrency, formatDate, MONTHS, generateId, getCurrentMonth, getCurrentYear } from '../../utils/formatters';
 import PageShell from '../../components/ui/PageShell';
+import Modal from '../../components/ui/Modal';
 import MonthYearFilter from '../../components/ui/MonthYearFilter';
 
 const emptyIncomeForm = () => ({
@@ -116,9 +117,7 @@ export default function ManageIncome() {
         }
       </div>
 
-      {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-box" onClick={e => e.stopPropagation()}>
+      <Modal open={showModal} onClose={() => setShowModal(false)}>
             <div className="modal-header">
               <div className="modal-title">{editId ? '✏️ Edit Income' : '➕ Add Income'}</div>
               <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
@@ -165,9 +164,7 @@ export default function ManageIncome() {
                 {saving ? <><span className="spinner sm" /> Saving...</> : '💾 Save'}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+      </Modal>
     </PageShell>
   );
 }

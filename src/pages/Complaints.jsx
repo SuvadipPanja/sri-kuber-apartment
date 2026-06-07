@@ -6,6 +6,7 @@ import { useSupabaseTable } from '../hooks/useSupabase';
 import { formatDate, generateId } from '../utils/formatters';
 import Icon from '../components/Icon';
 import PageShell from '../components/ui/PageShell';
+import Modal from '../components/ui/Modal';
 import EmptyState from '../components/ui/EmptyState';
 
 const CATEGORIES = ['Plumbing', 'Electrical', 'Cleaning', 'Lift / Elevator', 'Noise', 'Security', 'Water Supply', 'Other'];
@@ -119,9 +120,7 @@ export default function Complaints() {
         )}
 
       {/* New Complaint Modal */}
-      {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-box" onClick={e => e.stopPropagation()}>
+      <Modal open={showModal} onClose={() => setShowModal(false)}>
             <div className="modal-header">
               <div className="modal-title"><Icon name="plus" size={18} /> New Complaint</div>
               <button className="modal-close" onClick={() => setShowModal(false)}><Icon name="x" size={16} /></button>
@@ -148,9 +147,7 @@ export default function Complaints() {
                 {saving ? <><span className="spinner sm" /> Submitting...</> : <><Icon name="check" size={16} /> Submit Complaint</>}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+      </Modal>
     </PageShell>
   );
 }

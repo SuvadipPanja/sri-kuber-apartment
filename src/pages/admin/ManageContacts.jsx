@@ -6,6 +6,7 @@ import { generateId, getInitials } from '../../utils/formatters';
 import { uploadContactPhoto, deleteContactPhoto } from '../../utils/uploadContactPhoto';
 import Icon from '../../components/Icon';
 import PageShell from '../../components/ui/PageShell';
+import Modal from '../../components/ui/Modal';
 
 const CATEGORIES = [
   'Plumber', 'Electrician', 'Carpenter', 'Security Guard',
@@ -232,9 +233,7 @@ export default function ManageContacts() {
       )}
 
       {/* ── Modal ── */}
-      {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-box" style={{ maxWidth: 520 }} onClick={e => e.stopPropagation()}>
+      <Modal open={showModal} onClose={() => setShowModal(false)}>
             <div className="modal-header">
               <div className="modal-title">
                 <Icon name={editId ? 'edit' : 'plus'} size={16}/>
@@ -324,9 +323,7 @@ export default function ManageContacts() {
                 {saving ? <><span className="spinner" style={{ width: 14, height: 14 }}/> Saving…</> : <><Icon name="check" size={15}/> Save Contact</>}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+      </Modal>
     </PageShell>
   );
 }

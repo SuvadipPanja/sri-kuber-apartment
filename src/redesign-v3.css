@@ -514,8 +514,8 @@
   animation: slideUpV3 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @keyframes slideUpV3 {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* —— Light theme layout (tokens in theme/ska-tokens.css) —— */
@@ -685,9 +685,9 @@ body {
   .modal-box {
     width: calc(100vw - 1.5rem) !important;
     max-width: none !important;
-    margin: 0.75rem;
-    max-height: calc(100dvh - 1.5rem);
-    overflow-y: auto;
+    margin: auto !important;
+    max-height: none !important;
+    overflow: hidden !important;
   }
   .nav-dropdown {
     right: 0.75rem;

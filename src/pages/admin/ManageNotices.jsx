@@ -6,6 +6,7 @@ import { formatDate, generateId } from '../../utils/formatters';
 import { isNoticeActive, toNoticeExpiryStorage } from '../../utils/notices';
 import Icon from '../../components/Icon';
 import PageShell from '../../components/ui/PageShell';
+import Modal from '../../components/ui/Modal';
 
 const EMPTY = { title: '', content: '', priority: 'normal', expiresAt: '' };
 
@@ -93,9 +94,7 @@ export default function ManageNotices() {
           </div>
         )}
 
-      {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-box wide" onClick={e => e.stopPropagation()}>
+      <Modal open={showModal} onClose={() => setShowModal(false)} wide>
             <div className="modal-header">
               <div className="modal-title"><Icon name="megaphone" size={18} /> {editId ? 'Edit Notice' : 'Post Notice'}</div>
               <button className="modal-close" onClick={() => setShowModal(false)}><Icon name="x" size={16} /></button>
@@ -131,9 +130,7 @@ export default function ManageNotices() {
                 {saving ? <><span className="spinner sm" /> Saving...</> : <><Icon name="check" size={16} /> {editId ? 'Update' : 'Post Notice'}</>}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+      </Modal>
     </PageShell>
   );
 }

@@ -6,6 +6,7 @@ import { getInitials } from '../../utils/formatters';
 import { uploadProfilePhoto } from '../../utils/uploadPhoto';
 import Icon from '../../components/Icon';
 import PageShell from '../../components/ui/PageShell';
+import Modal from '../../components/ui/Modal';
 
 const EMPTY = { flatNo: '', ownerName: '', phone: '', email: '', monthlyCharge: 500, active: true, notes: '', photoUrl: '' };
 
@@ -107,9 +108,7 @@ export default function ManageOwners() {
         </div>
       )}
 
-      {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-box wide" onClick={e => e.stopPropagation()}>
+      <Modal open={showModal} onClose={() => setShowModal(false)} wide>
             <div className="modal-header">
               <div className="modal-title"><Icon name="edit" size={18} /> Edit Flat {form.flatNo} — Owner Details</div>
               <button className="modal-close" onClick={() => setShowModal(false)}><Icon name="x" size={16} /></button>
@@ -181,9 +180,7 @@ export default function ManageOwners() {
                 {saving ? <><span className="spinner sm" /> Saving...</> : <><Icon name="check" size={16} /> Save Changes</>}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+      </Modal>
     </PageShell>
   );
 }
