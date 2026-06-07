@@ -8,11 +8,12 @@ export function parseNoticeExpiryEnd(expiresAt) {
 }
 
 /** True if notice has no expiry or today is on/before the expiry date. */
-export function isNoticeActive(notice, at = new Date()) {
+export function isNoticeActive(notice, at) {
+  const now = at instanceof Date ? at : new Date();
   if (!notice?.expires_at) return true;
   const end = parseNoticeExpiryEnd(notice.expires_at);
   if (!end) return true;
-  return at.getTime() <= end.getTime();
+  return now.getTime() <= end.getTime();
 }
 
 /** Store expiry as end of selected day so it stays visible through that date. */

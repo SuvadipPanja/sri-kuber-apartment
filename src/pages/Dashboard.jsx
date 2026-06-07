@@ -86,7 +86,7 @@ export default function Dashboard() {
   );
 
   // Re-show banner when admin publishes a new notice (new id)
-  const latestNotice = notices.find(isNoticeActive) || null;
+  const latestNotice = notices.find((n) => isNoticeActive(n)) || null;
 
   useEffect(() => {
     if (latestNotice && dismissedNoticeId && dismissedNoticeId !== latestNotice.id) {

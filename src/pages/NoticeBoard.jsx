@@ -15,7 +15,7 @@ export default function NoticeBoard() {
   const { data: notices, loading } = useSupabaseTable('notices', q => q.order('created_at', { ascending: false }));
 
   // Hide notices past their expiry date (valid through end of expiry day)
-  const activeNotices = notices.filter(isNoticeActive);
+  const activeNotices = notices.filter((n) => isNoticeActive(n));
 
   if (loading) return <div className="loading-screen"><div className="spinner lg"></div></div>;
 
