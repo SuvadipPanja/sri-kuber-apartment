@@ -2,6 +2,11 @@
    Mobile & touch — app-wide (768px and below)
    ================================================================ */
 
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
 @media (max-width: 768px) {
   .app-layout {
     overflow-x: hidden;
@@ -50,10 +55,12 @@
     max-width: min(280px, calc(100vw - 1.5rem));
   }
 
-  /* Modals */
+  /* Modals — bottom sheet */
   .modal-overlay {
     align-items: flex-end;
-    padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+    justify-content: center;
+    padding: 0;
+    overflow: hidden;
   }
 
   .modal-box {
@@ -61,13 +68,44 @@
     max-width: 100% !important;
     margin: 0 !important;
     border-radius: var(--r-xl) var(--r-xl) 0 0 !important;
-    max-height: min(92dvh, calc(100dvh - env(safe-area-inset-top, 0px) - 0.5rem)) !important;
+    max-height: min(94dvh, calc(100dvh - env(safe-area-inset-top, 0px))) !important;
+    overflow: hidden !important;
+    animation: sheetUp 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* Drag handle */
+  .modal-grabber {
+    display: block;
+    width: 40px;
+    height: 4px;
+    border: none;
+    border-radius: var(--r-full);
+    background: var(--border);
+    margin: 0.55rem auto 0.1rem;
+    flex-shrink: 0;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .modal-header {
+    padding: 0.85rem 1.15rem 0.85rem;
+  }
+
+  .modal-title { font-size: 1rem; }
+
+  .modal-body {
+    padding: 1rem 1.15rem;
+    max-height: none !important;
+    flex: 1 1 auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   .modal-footer {
-    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
-    flex-wrap: wrap;
+    padding: 0.9rem 1.15rem calc(0.9rem + env(safe-area-inset-bottom, 0px));
     gap: 0.5rem;
+    position: sticky;
+    bottom: 0;
   }
 
   .modal-footer .btn {
@@ -142,6 +180,33 @@
   .login-btn-submit {
     touch-action: manipulation;
   }
+
+  /* Comfortable spacing between stacked cards */
+  .flex-col.gap-2 { gap: 0.75rem; }
+  .card + .card { margin-top: 0.75rem; }
+
+  /* Horizontal-scroll tables: momentum + subtle edge fade so users know to swipe */
+  .table-wrapper,
+  .table-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    overflow-x: auto;
+  }
+
+  /* Tap-friendly icon action buttons in tables/cards */
+  .btn-icon {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+  }
+
+  /* Avoid iOS zoom on focus — all text inputs at least 16px */
+  input,
+  select,
+  textarea { font-size: 16px; }
+
+  /* Keep destructive/confirm dialogs readable */
+  .modal-body .alert { font-size: 0.8rem; }
 }
 
 @media (max-width: 480px) {

@@ -673,6 +673,9 @@ code { font-family: var(--font-mono); background: var(--bg-elevated); padding: 0
 .modal-box.wide { max-width: 760px; }
 .modal-box.narrow { max-width: 420px; }
 
+/* Drag handle — only visible on mobile bottom-sheet */
+.modal-grabber { display: none; }
+
 .modal-header {
   display: flex;
   align-items: center;

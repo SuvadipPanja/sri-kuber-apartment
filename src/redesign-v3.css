@@ -682,13 +682,6 @@ body {
   .form-input,
   .form-select,
   .form-textarea { min-height: 44px; font-size: 16px; }
-  .modal-box {
-    width: calc(100vw - 1.5rem) !important;
-    max-width: none !important;
-    margin: auto !important;
-    max-height: none !important;
-    overflow: hidden !important;
-  }
   .nav-dropdown {
     right: 0.75rem;
     left: auto;

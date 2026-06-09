@@ -31,6 +31,12 @@ export default function Modal({ open, onClose, children, wide = false, narrow = 
   return createPortal(
     <div className="modal-overlay" onClick={onClose} role="presentation">
       <div className={boxClass} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+        <button
+          type="button"
+          className="modal-grabber"
+          aria-label="Close"
+          onClick={onClose}
+        />
         {children}
       </div>
     </div>,
