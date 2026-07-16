@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Rectangle } from 'recharts';
 import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
 import { usePeriodFilter } from '../hooks/usePeriodFilter';
 import { useAuth } from '../context/AuthContext';
@@ -17,7 +17,7 @@ const CHART = {
   pending:  '#f43f5e',
   inactive: '#64748b',
   expected: '#0f766e',
-  collected:'#22c55e',
+  collected:'#16a34a',
   due:      '#f59e0b',
   expense:  '#f43f5e',
   netPos:   '#14b8a6',
@@ -56,6 +56,24 @@ function ChartEmpty({ message }) {
       <Icon name="chart" size={32} />
       <p>{message}</p>
     </div>
+  );
+}
+
+function MoneyFlowBar(props) {
+  const { x, y, width, height, payload } = props;
+  if (x == null || y == null || width == null || height == null || width === 0) {
+    return null;
+  }
+  return (
+    <Rectangle
+      x={x}
+      y={y}
+      width={width}
+      height={height}
+      radius={[0, 5, 5, 0]}
+      fill={payload.barColor}
+      isAnimationActive={false}
+    />
   );
 }
 
@@ -108,17 +126,49 @@ export default function Dashboard() {
   const expenses = rawExpenses.map(mapExpense);
   const income   = rawIncome;
 
-  // --- Carry Forward: previous month's net balance ---
+  // --- Carry Forward: compute chain from seed ---
+  // The config.carry_forward object stores ONLY the seed (opening balance of the
+  // earliest month). After that, each month's opening = previous month's net balance.
+  // We walk backwards until we find a seed value, then roll forward.
   const prev = getPrevMonthYear(month, year);
-  const prevOpeningBal  = prev ? (config?.carry_forward?.[`${prev.month}-${prev.year}`] || 0) : 0;
-  const prevCollected   = prev ? totalCollection(payments, prev.month, prev.year) : 0;
-  const prevSpent       = prev ? totalExpenses(expenses, prev.month, prev.year) : 0;
-  const prevOtherInc    = prev ? totalOtherIncome(income, prev.month, prev.year) : 0;
-  const carryForward    = prev ? (prevOpeningBal + prevCollected + prevOtherInc - prevSpent) : 0;
 
-  // Current month uses carry forward as effective opening balance
-  const manualOpening   = config?.carry_forward?.[`${month}-${year}`] || 0;
-  const openingBalance  = (prev && month !== 'All' && year !== 'All') ? carryForward : manualOpening;
+  // computeOpeningBalance(m, y): recursively compute the opening balance for a
+  // given month by walking back until a seeded value is found in config.
+  function computeOpeningBalance(m, y) {
+    if (m === 'All' || y === 'All') return 0;
+    const seed = config?.carry_forward?.[`${m}-${y}`];
+    // If there's a seed AND no real previous-month data (payments or expenses exist
+    // before this month), use the seed. But actually the safest rule is:
+    // use the seed ONLY if it's the very first month (prev month has no seed either).
+    // Simpler & correct approach: always prefer computed chain; only fall back to
+    // seed for months where we literally have nothing computed (i.e. prev has no
+    // seed and no transactions).
+    const p = getPrevMonthYear(m, y);
+    if (!p) {
+      // No previous month at all – use seed or 0
+      return seed || 0;
+    }
+    const prevSeed = config?.carry_forward?.[`${p.month}-${p.year}`];
+    const prevPayments = totalCollection(payments, p.month, p.year);
+    const prevExpenses = totalExpenses(expenses, p.month, p.year);
+    const prevIncome   = totalOtherIncome(income, p.month, p.year);
+    const prevHasData  = prevPayments > 0 || prevExpenses > 0 || prevIncome > 0 || prevSeed > 0;
+    if (!prevHasData) {
+      // Previous month is completely empty – use this month's seed if available
+      return seed || 0;
+    }
+    // Previous month has data – compute its net balance as this month's opening
+    const prevOpening = computeOpeningBalance(p.month, p.year);
+    return prevOpening + prevPayments + prevIncome - prevExpenses;
+  }
+
+  const openingBalance = (month !== 'All' && year !== 'All') ? computeOpeningBalance(month, year) : 0;
+
+  // Carry forward shown in the KPI card = opening of current month (i.e. prev month net)
+  const carryForward = openingBalance;
+  const prevCollected = prev ? totalCollection(payments, prev.month, prev.year) : 0;
+  const prevSpent     = prev ? totalExpenses(expenses, prev.month, prev.year) : 0;
+  const prevOtherInc  = prev ? totalOtherIncome(income, prev.month, prev.year) : 0;
 
   const collected  = totalCollection(payments, month, year);
   const spent      = totalExpenses(expenses, month, year);
@@ -142,11 +192,11 @@ export default function Dashboard() {
   ].filter(d => d.value > 0);
 
   const financialData = [
-    { name: 'Expected', amount: expectedCollection, fill: CHART.expected },
-    { name: 'Collected', amount: collected, fill: CHART.collected },
-    { name: 'Pending', amount: pendingAmount, fill: CHART.due },
-    { name: 'Expenses', amount: spent, fill: CHART.expense },
-    { name: 'Net Balance', amount: netBalance, fill: netBalance >= 0 ? CHART.netPos : CHART.netNeg },
+    { name: 'Expected', amount: expectedCollection, barColor: CHART.expected },
+    { name: 'Collected', amount: collected, barColor: CHART.collected },
+    { name: 'Pending', amount: pendingAmount, barColor: CHART.due },
+    { name: 'Expenses', amount: spent, barColor: CHART.expense },
+    { name: 'Net Balance', amount: netBalance, barColor: netBalance >= 0 ? CHART.netPos : CHART.netNeg },
   ];
 
   if (isLoading) return (
@@ -363,16 +413,25 @@ export default function Dashboard() {
                   tickLine={false}
                 />
                 <ReferenceLine x={0} stroke="rgba(255,255,255,0.15)" />
-                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(99,102,241,0.08)' }} />
-                <Bar dataKey="amount" radius={[0, 5, 5, 0]} barSize={18}>
-                  {financialData.map((entry) => (
-                    <Cell key={entry.name} fill={entry.fill} />
-                  ))}
-                </Bar>
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(148,163,184,0.12)' }} />
+                <Bar
+                  dataKey="amount"
+                  barSize={18}
+                  isAnimationActive={false}
+                  shape={MoneyFlowBar}
+                />
               </BarChart>
               </ResponsiveContainer>
             </div>
           )}
+          <div className="chart-legend-row">
+            {financialData.filter((d) => d.amount !== 0).map((d) => (
+              <span key={d.name}>
+                <i style={{ background: d.barColor }} />
+                {d.name}
+              </span>
+            ))}
+          </div>
           <div className="chart-summary-row">
             <div className="chart-summary-item">
               <span className="chart-summary-label">Opening</span>
@@ -404,7 +463,9 @@ export default function Dashboard() {
               </div>
               <div>
                 <div className="text-sm fw-bold" style={{ color: 'var(--gold)' }}>Carry Forward from {prev.month} {prev.year}</div>
-                <div className="text-xs text-muted-c">Prev collection {formatCurrency(prevCollected)} + Other {formatCurrency(prevOtherInc)} − Expenses {formatCurrency(prevSpent)}</div>
+                <div className="text-xs text-muted-c">
+                  Collection {formatCurrency(prevCollected)} + Other {formatCurrency(prevOtherInc)} − Expenses {formatCurrency(prevSpent)} (Opening {formatCurrency(computeOpeningBalance(prev.month, prev.year))})
+                </div>
               </div>
             </div>
             <div className="text-xl fw-black rupee" style={{ color: carryForward >= 0 ? 'var(--gold)' : 'var(--danger)' }}>
