@@ -156,6 +156,29 @@
 .mr-fin-amt.neg { color: var(--mr-danger); }
 .mr-fin-amt.neutral { color: var(--mr-accent); }
 
+/* Other Income breakdown sub-rows */
+.mr-fin-subrow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.18em 0.85em 0.18em 1.8em;
+  border-bottom: 1px dashed #e2e8f0;
+  background: #f0fdf4;
+}
+.mr-fin-sublabel {
+  font-size: 0.88em;
+  color: #166534;
+  font-style: italic;
+  flex: 1;
+}
+.mr-fin-subamt {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: #166534;
+  white-space: nowrap;
+}
+
 .mr-fin-net {
   display: flex;
   justify-content: space-between;

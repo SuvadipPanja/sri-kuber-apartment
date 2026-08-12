@@ -51,6 +51,7 @@ export default function MonthlyReportDocument({
   netBalance = 0,
   dues = [],
   monthExpenses = [],
+  monthIncome = [],
   fitOnePage = true,
 }) {
   const innerRef = useRef(null);
@@ -122,6 +123,13 @@ export default function MonthlyReportDocument({
             <span className="mr-fin-label"><span className="mr-fin-amt pos">+</span> Other Income / Donations</span>
             <span className="mr-fin-amt pos">{formatCurrency(otherIncome)}</span>
           </div>
+          {/* inline breakdown — one tiny line per income entry */}
+          {monthIncome.length > 0 && monthIncome.map((inc) => (
+            <div key={inc.id} className="mr-fin-subrow">
+              <span className="mr-fin-sublabel">↳ {inc.source}{inc.remarks ? ` · ${inc.remarks}` : ''}</span>
+              <span className="mr-fin-subamt">{formatCurrency(inc.amount)}</span>
+            </div>
+          ))}
           <div className="mr-fin-row">
             <span className="mr-fin-label"><span className="mr-fin-amt neg">−</span> Total Expenses</span>
             <span className="mr-fin-amt neg">{formatCurrency(spent)}</span>

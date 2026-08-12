@@ -47,8 +47,9 @@ export default function PrintableStatement() {
   const spent       = totalExpenses(expenses, month, year);
   const otherIncome = totalOtherIncome(income, month, year);
   const netBalance  = calculateNetBalance(payments, expenses, income, month, year, openingBalance);
-  const dues        = buildPendingDues(owners, payments, month, year);
-  const monthExpenses = expenses.filter(e => e.month === month && e.year === Number(year));
+  const dues          = buildPendingDues(owners, payments, month, year);
+  const monthExpenses  = expenses.filter(e => e.month === month && e.year === Number(year));
+  const monthIncome    = income.filter(i => i.month === month && i.year === Number(year));
 
   const societyName = config?.society_name || 'SRI KUBER APARTMENT';
   const generatedOn = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -134,6 +135,7 @@ export default function PrintableStatement() {
           carryForwardLabel={prev ? `(From ${prev.month} ${prev.year} closing)` : null}
           collected={collected}
           otherIncome={otherIncome}
+          monthIncome={monthIncome}
           spent={spent}
           netBalance={netBalance}
           dues={dues}
