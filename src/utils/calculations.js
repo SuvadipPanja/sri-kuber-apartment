@@ -2,6 +2,67 @@
  * Financial calculation utilities
  */
 
+const MONTHS_ORDER = [
+  'January','February','March','April','May','June',
+  'July','August','September','October','November','December',
+];
+
+/**
+ * Get the previous month/year given a month string and year.
+ * Returns null if month or year is 'All'.
+ */
+export function getPrevMonthYear(month, year) {
+  if (month === 'All' || year === 'All') return null;
+  const idx = MONTHS_ORDER.indexOf(month);
+  if (idx <= 0) return { month: 'December', year: Number(year) - 1 };
+  return { month: MONTHS_ORDER[idx - 1], year: Number(year) };
+}
+
+/**
+ * Compute the opening balance for a given month by rolling forward from the seed.
+ *
+ * Rules:
+ *   - config.carry_forward is a map { "Month-YYYY": number } that stores SEED values
+ *     (manually entered starting balances) for the earliest months.
+ *   - Once a month has real transaction data in its previous month, the opening
+ *     balance is ALWAYS computed dynamically as prev month's net balance.
+ *   - This prevents stale manual values from overriding correct computed values.
+ *
+ * @param {string} month
+ * @param {number|string} year
+ * @param {object} config  - the config row (with carry_forward map)
+ * @param {Array}  payments
+ * @param {Array}  expenses
+ * @param {Array}  income
+ * @returns {number}
+ */
+export function computeOpeningBalance(month, year, config, payments, expenses, income) {
+  if (month === 'All' || year === 'All') return 0;
+
+  const seed = config?.carry_forward?.[`${month}-${year}`];
+  const p = getPrevMonthYear(month, year);
+
+  if (!p) {
+    // No previous month exists (e.g., January of the first year) — use seed or 0
+    return seed || 0;
+  }
+
+  const prevPayments = totalCollection(payments, p.month, p.year);
+  const prevExpenses = totalExpenses(expenses, p.month, p.year);
+  const prevIncome   = totalOtherIncome(income, p.month, p.year);
+  const prevSeed     = config?.carry_forward?.[`${p.month}-${p.year}`];
+  const prevHasData  = prevPayments > 0 || prevExpenses > 0 || prevIncome > 0 || (prevSeed || 0) > 0;
+
+  if (!prevHasData) {
+    // Previous month has no data at all — fall back to this month's seed if available
+    return seed || 0;
+  }
+
+  // Previous month has data — roll forward: prev opening + prev net activity
+  const prevOpening = computeOpeningBalance(p.month, p.year, config, payments, expenses, income);
+  return prevOpening + prevPayments + prevIncome - prevExpenses;
+}
+
 /**
  * Get all payments for a specific month and year
  */

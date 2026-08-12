@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useSupabaseTable, useConfig } from '../hooks/useSupabase';
 import { usePeriodFilter } from '../hooks/usePeriodFilter';
 import { formatCurrency, MONTHS } from '../utils/formatters';
-import { buildPendingDues, totalCollection, totalExpenses, totalOtherIncome, calculateNetBalance } from '../utils/calculations';
+import { buildPendingDues, totalCollection, totalExpenses, totalOtherIncome, calculateNetBalance, computeOpeningBalance } from '../utils/calculations';
 import { useToast } from '../context/ToastContext';
 
 function mapPayment(p) { return { ...p, flatNo: p.flat_no, ownerName: p.owner_name, amountPaid: p.amount_paid, paymentDate: p.payment_date, paymentMode: p.payment_mode }; }
@@ -25,7 +25,8 @@ export default function WhatsAppShare() {
   const expenses = rawExpenses.map(mapExpense);
   const income = rawIncome;
 
-  const openingBalance = config?.carry_forward?.[`${month}-${year}`] || 0;
+  // Use rolling-chain computation — do NOT read stale carry_forward from DB directly
+  const openingBalance = computeOpeningBalance(month, year, config, payments, expenses, income);
   const collected = totalCollection(payments, month, year);
   const spent = totalExpenses(expenses, month, year);
   const otherIncome = totalOtherIncome(income, month, year);

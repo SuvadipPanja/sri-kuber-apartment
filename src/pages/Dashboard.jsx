@@ -5,7 +5,7 @@ import { usePeriodFilter } from '../hooks/usePeriodFilter';
 import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '../utils/formatters';
 import { getFirstName, getTimeGreeting } from '../utils/greetings';
-import { totalCollection, totalExpenses, totalOtherIncome, calculateNetBalance, getFlatStats, buildPendingDues } from '../utils/calculations';
+import { totalCollection, totalExpenses, totalOtherIncome, calculateNetBalance, getFlatStats, buildPendingDues, computeOpeningBalance, getPrevMonthYear } from '../utils/calculations';
 import { Link } from 'react-router-dom';
 import { isNoticeActive } from '../utils/notices';
 import Icon from '../components/Icon';
@@ -77,12 +77,7 @@ function MoneyFlowBar(props) {
   );
 }
 
-function getPrevMonthYear(month, year) {
-  if (month === 'All' || year === 'All') return null;
-  const idx = MONTHS_ORDER.indexOf(month);
-  if (idx <= 0) return { month: 'December', year: Number(year) - 1 };
-  return { month: MONTHS_ORDER[idx - 1], year: Number(year) };
-}
+
 
 function mapPayment(p) { return { ...p, flatNo: p.flat_no, ownerName: p.owner_name, amountPaid: p.amount_paid, paymentDate: p.payment_date, paymentMode: p.payment_mode }; }
 function mapExpense(e) { return { ...e, expenseType: e.expense_type, billAmount: e.bill_amount, builderContribution: e.builder_contribution, netExpense: e.net_expense, paidTo: e.paid_to }; }
@@ -126,45 +121,14 @@ export default function Dashboard() {
   const expenses = rawExpenses.map(mapExpense);
   const income   = rawIncome;
 
-  // --- Carry Forward: compute chain from seed ---
-  // The config.carry_forward object stores ONLY the seed (opening balance of the
-  // earliest month). After that, each month's opening = previous month's net balance.
-  // We walk backwards until we find a seed value, then roll forward.
+  // --- Carry Forward: compute rolling chain from seed ---
   const prev = getPrevMonthYear(month, year);
 
-  // computeOpeningBalance(m, y): recursively compute the opening balance for a
-  // given month by walking back until a seeded value is found in config.
-  function computeOpeningBalance(m, y) {
-    if (m === 'All' || y === 'All') return 0;
-    const seed = config?.carry_forward?.[`${m}-${y}`];
-    // If there's a seed AND no real previous-month data (payments or expenses exist
-    // before this month), use the seed. But actually the safest rule is:
-    // use the seed ONLY if it's the very first month (prev month has no seed either).
-    // Simpler & correct approach: always prefer computed chain; only fall back to
-    // seed for months where we literally have nothing computed (i.e. prev has no
-    // seed and no transactions).
-    const p = getPrevMonthYear(m, y);
-    if (!p) {
-      // No previous month at all – use seed or 0
-      return seed || 0;
-    }
-    const prevSeed = config?.carry_forward?.[`${p.month}-${p.year}`];
-    const prevPayments = totalCollection(payments, p.month, p.year);
-    const prevExpenses = totalExpenses(expenses, p.month, p.year);
-    const prevIncome   = totalOtherIncome(income, p.month, p.year);
-    const prevHasData  = prevPayments > 0 || prevExpenses > 0 || prevIncome > 0 || prevSeed > 0;
-    if (!prevHasData) {
-      // Previous month is completely empty – use this month's seed if available
-      return seed || 0;
-    }
-    // Previous month has data – compute its net balance as this month's opening
-    const prevOpening = computeOpeningBalance(p.month, p.year);
-    return prevOpening + prevPayments + prevIncome - prevExpenses;
-  }
+  const openingBalance = (month !== 'All' && year !== 'All')
+    ? computeOpeningBalance(month, year, config, payments, expenses, income)
+    : 0;
 
-  const openingBalance = (month !== 'All' && year !== 'All') ? computeOpeningBalance(month, year) : 0;
-
-  // Carry forward shown in the KPI card = opening of current month (i.e. prev month net)
+  // Carry forward shown in the KPI card = opening of current month (= prev month net)
   const carryForward = openingBalance;
   const prevCollected = prev ? totalCollection(payments, prev.month, prev.year) : 0;
   const prevSpent     = prev ? totalExpenses(expenses, prev.month, prev.year) : 0;
@@ -464,7 +428,7 @@ export default function Dashboard() {
               <div>
                 <div className="text-sm fw-bold" style={{ color: 'var(--gold)' }}>Carry Forward from {prev.month} {prev.year}</div>
                 <div className="text-xs text-muted-c">
-                  Collection {formatCurrency(prevCollected)} + Other {formatCurrency(prevOtherInc)} − Expenses {formatCurrency(prevSpent)} (Opening {formatCurrency(computeOpeningBalance(prev.month, prev.year))})
+                  Collection {formatCurrency(prevCollected)} + Other {formatCurrency(prevOtherInc)} − Expenses {formatCurrency(prevSpent)} (Opening {formatCurrency(computeOpeningBalance(prev.month, prev.year, config, payments, expenses, income))})
                 </div>
               </div>
             </div>

@@ -6,6 +6,7 @@ import { usePeriodFilter } from '../hooks/usePeriodFilter';
 import {
   buildPendingDues, totalCollection, totalExpenses,
   totalOtherIncome, calculateNetBalance,
+  computeOpeningBalance, getPrevMonthYear,
 } from '../utils/calculations';
 import { shareReportAsImage } from '../utils/shareReportImage';
 import Icon from '../components/Icon';
@@ -13,16 +14,6 @@ import PageShell from '../components/ui/PageShell';
 import MonthYearFilter from '../components/ui/MonthYearFilter';
 import MonthlyReportDocument, { buildReportShareTitle, applyReportFit } from '../components/reports/MonthlyReportDocument';
 import { useToast } from '../context/ToastContext';
-
-const MONTHS_ORDER = ['January','February','March','April','May','June',
-  'July','August','September','October','November','December'];
-
-function getPrevMonthYear(month, year) {
-  if (month === 'All' || year === 'All') return null;
-  const idx = MONTHS_ORDER.indexOf(month);
-  if (idx <= 0) return { month: 'December', year: Number(year) - 1 };
-  return { month: MONTHS_ORDER[idx - 1], year: Number(year) };
-}
 
 function mapPayment(p) { return { ...p, flatNo: p.flat_no, ownerName: p.owner_name, amountPaid: p.amount_paid, paymentDate: p.payment_date, paymentMode: p.payment_mode }; }
 function mapExpense(e) { return { ...e, expenseType: e.expense_type, billAmount: e.bill_amount, builderContribution: e.builder_contribution, netExpense: e.net_expense, paidTo: e.paid_to, expenseDate: e.expense_date }; }
@@ -46,15 +37,11 @@ export default function PrintableStatement() {
   const expenses = rawExpenses.map(mapExpense);
   const income   = rawIncome;
 
-  const prev          = getPrevMonthYear(month, year);
-  const prevOpenBal   = prev ? (config?.carry_forward?.[`${prev.month}-${prev.year}`] || 0) : 0;
-  const prevCollected = prev ? totalCollection(payments, prev.month, prev.year) : 0;
-  const prevSpent     = prev ? totalExpenses(expenses, prev.month, prev.year) : 0;
-  const prevOtherInc  = prev ? totalOtherIncome(income, prev.month, prev.year) : 0;
-  const carryForward  = prev ? (prevOpenBal + prevCollected + prevOtherInc - prevSpent) : 0;
+  const prev         = getPrevMonthYear(month, year);
 
-  const manualOpening  = config?.carry_forward?.[`${month}-${year}`] || 0;
-  const openingBalance = (prev && month !== 'All' && year !== 'All') ? carryForward : manualOpening;
+  // Use shared rolling-chain computation — the ONLY correct way to get opening balance
+  const openingBalance = computeOpeningBalance(month, year, config, payments, expenses, income);
+  const carryForward   = openingBalance; // opening of current month = net of previous month
 
   const collected   = totalCollection(payments, month, year);
   const spent       = totalExpenses(expenses, month, year);

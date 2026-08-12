@@ -6,6 +6,7 @@ import {
   totalExpenses,
   totalOtherIncome,
   calculateNetBalance,
+  computeOpeningBalance,
 } from '../utils/calculations';
 import { MONTHS } from '../utils/formatters';
 
@@ -82,7 +83,12 @@ function buildMonthlySummary(tables) {
   return periods.map((key) => {
     const [month, yearStr] = key.split('-');
     const year = Number(yearStr);
-    const opening = carryForward[key] ?? 0;
+    const opening = computeOpeningBalance(
+      month, year, config,
+      tables.payments || [],
+      tables.expenses || [],
+      tables.income || []
+    );
     const collected = totalCollection(tables.payments || [], month, year);
     const spent = totalExpenses(tables.expenses || [], month, year);
     const other = totalOtherIncome(tables.income || [], month, year);
