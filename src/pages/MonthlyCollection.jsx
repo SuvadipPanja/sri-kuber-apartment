@@ -36,8 +36,8 @@ export default function MonthlyCollection() {
 
   const paidList = dues.filter(d => d.paid);
   const pendingList = dues.filter(d => !d.paid);
-  const totalPaid = paidList.reduce((s, d) => s + d.amountPaid, 0);
-  const totalPending = pendingList.reduce((s, d) => s + d.monthlyCharge, 0);
+  const totalPaid    = paidList.reduce((s, d) => s + Number(d.amountPaid || 0), 0);
+  const totalPending  = pendingList.reduce((s, d) => s + Number(d.monthlyCharge || 0), 0);
   const collectionRate = dues.length > 0 ? Math.round((paidList.length / dues.length) * 100) : 0;
 
   let displayDues = dues;

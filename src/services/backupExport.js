@@ -77,7 +77,6 @@ function periodKeysFromData(tables) {
 
 function buildMonthlySummary(tables) {
   const config = tables.config?.[0] || {};
-  const carryForward = config.carry_forward || {};
   const periods = periodKeysFromData(tables);
 
   return periods.map((key) => {

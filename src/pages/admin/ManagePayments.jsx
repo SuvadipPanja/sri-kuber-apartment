@@ -99,7 +99,7 @@ export default function ManagePayments() {
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
           <h3 style={{ fontSize: '1rem' }}>{month} {year} — {filtered.length} records</h3>
-          <span className="badge badge-success">{formatCurrency(filtered.reduce((s, p) => s + p.amountPaid, 0))} collected</span>
+          <span className="badge badge-success">{formatCurrency(filtered.reduce((s, p) => s + Number(p.amountPaid || 0), 0))} collected</span>
         </div>
         {loading ? <div className="flex-center" style={{ padding: '2rem' }}><div className="spinner" /></div> :
           filtered.length === 0 ? <div className="empty-state"><div className="empty-icon">💳</div><p>No payments for {month} {year}. Click "Add Payment" to record one.</p></div> :

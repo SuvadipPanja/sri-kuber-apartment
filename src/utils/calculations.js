@@ -131,31 +131,38 @@ export function calculateNetBalance(payments, expenses, income, month, year, ope
 /**
  * Build pending dues list for a given month/year
  * Returns array of { flatNo, ownerName, monthlyCharge, paid, amountPaid, paymentDate, status }
+ *
+ * IMPORTANT: A flat is considered PAID for a specific month only if:
+ *   - There is at least one payment record for EXACTLY that month/year, AND
+ *   - The total amount paid >= their monthly charge.
+ * (Using flatPayments.length > 0 alone is WRONG — it would mark a flat as paid
+ *  even if its payment was recorded under a different month.)
  */
 export function buildPendingDues(owners, payments, month, year) {
   const activeOwners = owners.filter(o => o.active);
   return activeOwners.map(owner => {
-    // If month is 'All', it's hard to define a single 'paid' status for the whole year.
-    // We'll calculate total paid vs total expected for the period.
     const flatPayments = payments.filter(
-      p => p.flatNo === owner.flatNo && 
-      (month === 'All' || p.month === month) && 
+      p => p.flatNo === owner.flatNo &&
+      (month === 'All' || p.month === month) &&
       (year === 'All' || p.year === Number(year))
     );
-    
+
     const amountPaid = flatPayments.reduce((sum, p) => sum + Number(p.amountPaid || 0), 0);
-    // Rough estimate: if month is All, expected is 12 * charge, else 1 * charge
+    // For 'All' mode: expected is 12 months * charge; for specific month: 1 * charge
     const expected = month === 'All' ? owner.monthlyCharge * 12 : owner.monthlyCharge;
-    
+
+    // A flat is PAID only if they actually have a payment AND paid enough
+    const hasPaid = flatPayments.length > 0 && amountPaid >= expected;
+
     return {
-      flatNo: owner.flatNo,
-      ownerName: owner.ownerName,
+      flatNo:       owner.flatNo,
+      ownerName:    owner.ownerName,
       monthlyCharge: owner.monthlyCharge,
-      paid: amountPaid >= expected || flatPayments.length > 0, // simple heuristic
+      paid:         hasPaid,
       amountPaid,
-      paymentDate: flatPayments.length > 0 ? flatPayments[0].paymentDate : null,
-      paymentMode: flatPayments.length > 0 ? flatPayments[0].paymentMode : null,
-      status: (amountPaid >= expected || flatPayments.length > 0) ? 'PAID' : 'PENDING',
+      paymentDate:  flatPayments.length > 0 ? flatPayments[0].paymentDate : null,
+      paymentMode:  flatPayments.length > 0 ? flatPayments[0].paymentMode : null,
+      status:       hasPaid ? 'PAID' : 'PENDING',
     };
   });
 }
