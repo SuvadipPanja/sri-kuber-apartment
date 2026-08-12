@@ -194,7 +194,7 @@ export function getFlatPayments(payments, flatNo) {
   return payments
     .filter(p => p.flatNo === flatNo)
     .sort((a, b) => {
-      if (a.year !== b.year) return b.year - a.year;
+      if (Number(a.year) !== Number(b.year)) return Number(b.year) - Number(a.year);
       const months = ['January','February','March','April','May','June',
                       'July','August','September','October','November','December'];
       return months.indexOf(b.month) - months.indexOf(a.month);

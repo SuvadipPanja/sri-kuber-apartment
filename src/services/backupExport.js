@@ -75,26 +75,32 @@ function periodKeysFromData(tables) {
   });
 }
 
+function mapPayment(p) { return { ...p, flatNo: p.flat_no, ownerName: p.owner_name, amountPaid: p.amount_paid, paymentDate: p.payment_date, paymentMode: p.payment_mode }; }
+function mapExpense(e) { return { ...e, expenseType: e.expense_type, billAmount: e.bill_amount, builderContribution: e.builder_contribution, netExpense: e.net_expense, paidTo: e.paid_to }; }
+
 function buildMonthlySummary(tables) {
   const config = tables.config?.[0] || {};
   const periods = periodKeysFromData(tables);
+  const payments = (tables.payments || []).map(mapPayment);
+  const expenses = (tables.expenses || []).map(mapExpense);
+  const income   = tables.income || [];
 
   return periods.map((key) => {
     const [month, yearStr] = key.split('-');
     const year = Number(yearStr);
     const opening = computeOpeningBalance(
       month, year, config,
-      tables.payments || [],
-      tables.expenses || [],
-      tables.income || []
+      payments,
+      expenses,
+      income
     );
-    const collected = totalCollection(tables.payments || [], month, year);
-    const spent = totalExpenses(tables.expenses || [], month, year);
-    const other = totalOtherIncome(tables.income || [], month, year);
+    const collected = totalCollection(payments, month, year);
+    const spent = totalExpenses(expenses, month, year);
+    const other = totalOtherIncome(income, month, year);
     const net = calculateNetBalance(
-      tables.payments || [],
-      tables.expenses || [],
-      tables.income || [],
+      payments,
+      expenses,
+      income,
       month,
       year,
       opening

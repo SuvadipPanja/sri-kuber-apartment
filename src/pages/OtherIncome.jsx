@@ -11,7 +11,10 @@ export default function OtherIncome() {
 
   const { month, year, setMonth: setSelectedMonth, setYear: setSelectedYear } = usePeriodFilter();
 
-  const monthIncome = rawIncome.filter(i => i.month === month && i.year === Number(year));
+  const monthIncome = rawIncome.filter(i =>
+    (month === 'All' || i.month === month) &&
+    (year === 'All' || Number(i.year) === Number(year))
+  );
   const total = totalOtherIncome(rawIncome, month, year);
 
   return (

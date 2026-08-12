@@ -145,7 +145,7 @@ export default function Dashboard() {
 
   const expectedCollection = owners
     .filter(o => o.active)
-    .reduce((sum, o) => sum + (month === 'All' ? o.monthlyCharge * 12 : o.monthlyCharge), 0);
+    .reduce((sum, o) => sum + (month === 'All' ? Number(o.monthlyCharge || 0) * 12 : Number(o.monthlyCharge || 0)), 0);
   const pendingAmount = Math.max(0, expectedCollection - collected);
   const collectionRate = stats.active > 0 ? Math.round((stats.paid / stats.active) * 100) : 0;
 
@@ -247,7 +247,7 @@ export default function Dashboard() {
             <div className="kpi-value rupee">{formatCurrency(spent)}</div>
             <div className="kpi-meta">
               <span className="kpi-trend down">
-                {month === 'All' ? expenses.length : expenses.filter(e => e.month === month && e.year === year).length} entries
+                {expenses.filter(e => (month === 'All' || e.month === month) && (year === 'All' || Number(e.year) === Number(year))).length} entries
               </span>
             </div>
           </div>
