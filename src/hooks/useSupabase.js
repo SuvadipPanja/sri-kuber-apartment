@@ -1,10 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useId } from 'react';
 import { supabase } from '../services/supabase';
+
+function channelName(prefix, id) {
+  return `${prefix}-${String(id).replace(/:/g, '')}`;
+}
 
 /**
  * Generic hook to fetch from a Supabase table with real-time subscription
  */
 export function useSupabaseTable(table, query = null) {
+  const instanceId = useId();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -28,7 +33,7 @@ export function useSupabaseTable(table, query = null) {
     fetchData();
     // Real-time subscription
     const channel = supabase
-      .channel(`realtime-${table}`)
+      .channel(channelName(`realtime-${table}`, instanceId))
       .on('postgres_changes', { event: '*', schema: 'public', table }, () => {
         fetchData();
       })
@@ -44,6 +49,7 @@ export function useSupabaseTable(table, query = null) {
  * Fetch single config row
  */
 export function useConfig() {
+  const instanceId = useId();
   const [config, setConfig] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -56,7 +62,7 @@ export function useConfig() {
   useEffect(() => {
     fetchConfig();
     const channel = supabase
-      .channel('realtime-config')
+      .channel(channelName('realtime-config', instanceId))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'config' }, fetchConfig)
       .subscribe();
     return () => supabase.removeChannel(channel);
