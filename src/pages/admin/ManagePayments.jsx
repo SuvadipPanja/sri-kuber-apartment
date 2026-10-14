@@ -105,10 +105,10 @@ export default function ManagePayments() {
     try {
       const result = await sendPaymentWhatsApp({ payment, config, phone });
       if (result.method === 'cancelled') return;
-      if (result.method === 'clipboard') {
-        addToast('WhatsApp opened for this flat. Paste the receipt (Ctrl+V), then Send.', 'success');
+      if (result.method === 'share') {
+        addToast('Select WhatsApp in the share menu to send the receipt image', 'success');
       } else {
-        addToast('WhatsApp opened for this flat. Attach the downloaded receipt, then Send.', 'success');
+        addToast('Receipt image downloaded — attach it in the WhatsApp chat that opened', 'success');
       }
       if (result.opened === false) addToast('Allow pop-ups to open WhatsApp.', 'error');
     } catch (err) {
