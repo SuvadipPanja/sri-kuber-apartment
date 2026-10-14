@@ -62,26 +62,27 @@ function downloadFile(file) {
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
+async function copyImage(file) {
+  if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') return false;
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': file })]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
- * Same one-click path as the monthly statement: the share menu sends the
- * receipt image and the short note together. A WhatsApp link cannot carry a file.
+ * Open WhatsApp on the flat's saved number with the short note.
+ * WhatsApp does not let a website attach a file to a chosen number, so the
+ * receipt image is copied for one paste into that already-open chat.
  */
 export async function sendPaymentWhatsApp({ payment, config, phone }) {
   const societyName = config?.society_name || 'Sri Kuber Apartment';
   const text = paymentWhatsAppMessage(payment, societyName);
   const file = await renderReceiptImage(payment, config);
-  const payload = { title: text, text, files: [file] };
-
-  if (navigator.share && (!navigator.canShare || navigator.canShare(payload))) {
-    try {
-      await navigator.share(payload);
-      return { method: 'share' };
-    } catch (err) {
-      if (err?.name === 'AbortError') return { method: 'cancelled' };
-    }
-  }
-
-  downloadFile(file);
+  const copied = await copyImage(file);
+  if (!copied) downloadFile(file);
   const opened = openAppWindow(buildWhatsAppUrl(phone, text));
-  return { method: 'download', opened };
+  return { method: copied ? 'clipboard' : 'download', opened };
 }
