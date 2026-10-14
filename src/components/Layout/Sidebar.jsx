@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useConfig } from '../../hooks/useSupabase';
 import Icon from '../Icon';
 
 const mainNav = [
@@ -27,6 +29,15 @@ const adminNav = [
 
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
   const { isSuperAdmin } = useAuth();
+  const { config } = useConfig();
+  const [logoFailed, setLogoFailed] = useState(false);
+  const gallery = Array.isArray(config?.society_gallery) ? config.society_gallery : [];
+  const societyPhoto = gallery.find((photo) => photo?.url)?.url || '';
+  const showPhoto = societyPhoto && !logoFailed;
+
+  useEffect(() => {
+    setLogoFailed(false);
+  }, [societyPhoto]);
 
   const NavItem = ({ item }) => (
     <NavLink
@@ -44,8 +55,16 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
       <div className="sidebar-brand">
-        <div className="sidebar-brand-logo">
-          <Icon name="building" size={22} color="white" />
+        <div className={`sidebar-brand-logo${showPhoto ? ' has-photo' : ''}`}>
+          {showPhoto ? (
+            <img
+              src={societyPhoto}
+              alt="Sri Kuber Apartment"
+              onError={() => setLogoFailed(true)}
+            />
+          ) : (
+            <Icon name="building" size={22} color="white" />
+          )}
         </div>
         <div className="sidebar-brand-text">
           <div className="sidebar-brand-name">Sri Kuber Apartment</div>
