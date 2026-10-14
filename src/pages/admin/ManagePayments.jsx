@@ -5,7 +5,8 @@ import { usePeriodFilter } from '../../hooks/usePeriodFilter';
 import { useToast } from '../../context/ToastContext';
 import { formatCurrency, formatDate, MONTHS, PAYMENT_MODES, generateId, getCurrentMonth, getCurrentYear } from '../../utils/formatters';
 import { generateReceipt } from '../../utils/receiptUtils';
-import { toWhatsAppNumber, paymentWhatsAppMessage, buildWhatsAppUrl, openAppWindow } from '../../utils/paymentShare';
+import { toWhatsAppNumber } from '../../utils/paymentShare';
+import { sendPaymentWhatsApp } from '../../utils/sharePaymentReceipt';
 import PageShell from '../../components/ui/PageShell';
 import Modal from '../../components/ui/Modal';
 import MonthYearFilter from '../../components/ui/MonthYearFilter';
@@ -27,6 +28,7 @@ export default function ManagePayments() {
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [sharingId, setSharingId] = useState(null);
   const { month, year, setMonth: setFilterMonth, setYear: setFilterYear } = usePeriodFilter();
 
   const payments = rawPayments.map(mapPayment);
@@ -91,17 +93,31 @@ export default function ManagePayments() {
     }
   };
 
-  const handleWhatsApp = (payment) => {
+  const handleWhatsApp = async (payment) => {
+    if (sharingId) return;
     const owner = rawOwners.find((o) => o.flat_no === payment.flatNo);
     const phone = toWhatsAppNumber(owner?.phone);
     if (!phone) {
       addToast(`No valid phone saved for Flat ${payment.flatNo}. Add it in Manage Owners.`, 'error');
       return;
     }
-    const societyName = config?.society_name || 'Sri Kuber Apartment';
-    const text = paymentWhatsAppMessage(payment, societyName);
-    const url = buildWhatsAppUrl(phone, text);
-    if (!openAppWindow(url)) addToast('Allow pop-ups to open WhatsApp.', 'error');
+    setSharingId(payment.id);
+    try {
+      const result = await sendPaymentWhatsApp({ payment, config, phone });
+      if (result.method === 'cancelled') return;
+      if (result.method === 'share') {
+        addToast('Receipt image is ready. Choose WhatsApp, then send.', 'success');
+      } else if (result.method === 'clipboard') {
+        addToast('Chat opened. Paste the receipt image with Ctrl+V, then send.', 'success');
+      } else {
+        addToast('Receipt image downloaded. Attach it in the WhatsApp chat, then send.', 'success');
+      }
+      if (result.opened === false) addToast('Allow pop-ups to open WhatsApp.', 'error');
+    } catch (err) {
+      addToast(err?.message || 'Could not prepare the receipt image.', 'error');
+    } finally {
+      setSharingId(null);
+    }
   };
 
   return (
@@ -145,7 +161,7 @@ export default function ManagePayments() {
                     <td>
                       <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'nowrap' }}>
                         <button className="btn-icon" onClick={() => handleReceipt(p)} title="Download receipt" aria-label={`Receipt for Flat ${p.flatNo}`}>🧾</button>
-                        <button className="btn-icon success" onClick={() => handleWhatsApp(p)} title="Send on WhatsApp" aria-label={`WhatsApp Flat ${p.flatNo}`}>💬</button>
+                        <button className="btn-icon success" onClick={() => handleWhatsApp(p)} title="Send receipt on WhatsApp" aria-label={`WhatsApp Flat ${p.flatNo}`} disabled={sharingId === p.id}>💬</button>
                         <button className="btn-icon" onClick={() => openEdit(p)} title="Edit">✏️</button>
                         <button className="btn-icon" onClick={() => handleDelete(p.id)} title="Delete" style={{ color: 'var(--danger)' }}>🗑️</button>
                       </div>

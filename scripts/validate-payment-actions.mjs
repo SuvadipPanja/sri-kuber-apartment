@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { buildWhatsAppUrl, paymentWhatsAppMessage, toWhatsAppNumber } from '../src/utils/paymentShare.js';
+import { buildWhatsAppUrl, paymentPurposeLabel, paymentWhatsAppMessage, toWhatsAppNumber } from '../src/utils/paymentShare.js';
 import { buildReceiptHtml, generateReceipt } from '../src/utils/receiptUtils.js';
 
 const payment = {
@@ -31,13 +31,22 @@ for (const [input, expected] of phoneCases) {
   assert.equal(toWhatsAppNumber(input), expected, `phone: ${input}`);
 }
 
-const message = paymentWhatsAppMessage(payment, 'Sri Kuber Apartment');
-for (const part of ['Prashanta Das', 'Flat 402', 'October 2026', '₹500', 'UPI', 'October maintenance', 'Thank you.']) {
-  assert.ok(message.includes(part), `message missing ${part}`);
-}
+assert.equal(paymentPurposeLabel(payment), 'maintenance');
+assert.equal(paymentPurposeLabel({ ...payment, remarks: '' }), 'maintenance');
+assert.equal(paymentPurposeLabel({ ...payment, remarks: 'Parking fee' }), 'Parking fee');
 
-const withoutRemarks = paymentWhatsAppMessage({ ...payment, remarks: '' }, 'Sri Kuber Apartment');
-assert.equal(withoutRemarks.includes('Remarks'), false);
+const message = paymentWhatsAppMessage(payment);
+assert.equal(message, [
+  'Dear Prashanta Das,',
+  'Thank you for your maintenance payment for Flat 402.',
+  '— Society Maintenance Team',
+].join('\n'));
+assert.equal(message.includes('₹500'), false);
+assert.equal(message.includes('UPI'), false);
+
+const other = paymentWhatsAppMessage({ ...payment, ownerName: 'Amit Chakraborty', flatNo: '201', remarks: 'Parking fee' });
+assert.ok(other.includes('Thank you for your Parking fee payment for Flat 201.'));
+assert.ok(other.includes('Society Maintenance Team'));
 
 const waUrl = buildWhatsAppUrl('919876543210', message);
 assert.ok(waUrl.startsWith('https://wa.me/919876543210?text='));
@@ -51,6 +60,10 @@ const html = buildReceiptHtml(payment, {
 for (const part of ['Prashanta Das', 'Flat', '402', 'October', '2026', 'UPI', '500', 'October maintenance', 'Sri Kuber Apartment']) {
   assert.ok(html.includes(part), `receipt missing ${part}`);
 }
+
+const imageHtml = buildReceiptHtml(payment, { society_name: 'Sri Kuber Apartment' }, { autoPrint: false });
+assert.equal(imageHtml.includes('window.print'), false);
+assert.ok(html.includes('window.print'));
 
 const unsafe = buildReceiptHtml({ ...payment, ownerName: 'A & B <script>' }, {});
 assert.ok(unsafe.includes('A &amp; B &lt;script&gt;'));

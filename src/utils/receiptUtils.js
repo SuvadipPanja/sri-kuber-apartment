@@ -45,7 +45,7 @@ function getAppOrigin() {
   return '';
 }
 
-export function buildReceiptHtml(payment, config) {
+export function buildReceiptHtml(payment, config, { autoPrint = true } = {}) {
   const societyName = config?.society_name || 'Sri Kuber Apartment';
   const addressParts = [config?.address, config?.city, config?.state].filter(Boolean);
   const address = addressParts.join(', ');
@@ -276,12 +276,12 @@ export function buildReceiptHtml(payment, config) {
     </div>
     <div class="footnote">This is a system-generated receipt &nbsp;|&nbsp; ${society}</div>
   </div>
-  <p class="print-hint">Use your browser menu → Print or Save as PDF</p>
+  ${autoPrint ? `<p class="print-hint">Use your browser menu → Print or Save as PDF</p>
   <script>
     window.addEventListener('load', function () {
       setTimeout(function () { window.print(); }, 400);
     });
-  </script>
+  </script>` : ''}
 </body>
 </html>`;
 }
