@@ -50,16 +50,6 @@ async function renderReceiptImage(payment, config) {
   }
 }
 
-async function copyImage(file) {
-  if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') return false;
-  try {
-    await navigator.clipboard.write([new ClipboardItem({ 'image/png': file })]);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 function downloadFile(file) {
   const url = URL.createObjectURL(file);
   const link = document.createElement('a');
@@ -73,17 +63,16 @@ function downloadFile(file) {
 }
 
 /**
- * Send a short thank-you plus the receipt image.
- * WhatsApp links cannot carry a file, so phones use the share sheet (image attached)
- * and desktop copies the image into the chat for that flat's number.
+ * Same one-click path as the monthly statement: the share menu sends the
+ * receipt image and the short note together. A WhatsApp link cannot carry a file.
  */
 export async function sendPaymentWhatsApp({ payment, config, phone }) {
-  const text = paymentWhatsAppMessage(payment);
+  const societyName = config?.society_name || 'Sri Kuber Apartment';
+  const text = paymentWhatsAppMessage(payment, societyName);
   const file = await renderReceiptImage(payment, config);
-  const payload = { title: 'Payment receipt', text, files: [file] };
-  const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+  const payload = { title: text, text, files: [file] };
 
-  if (mobile && navigator.share && (!navigator.canShare || navigator.canShare(payload))) {
+  if (navigator.share && (!navigator.canShare || navigator.canShare(payload))) {
     try {
       await navigator.share(payload);
       return { method: 'share' };
@@ -92,8 +81,7 @@ export async function sendPaymentWhatsApp({ payment, config, phone }) {
     }
   }
 
-  const copied = await copyImage(file);
-  if (!copied) downloadFile(file);
+  downloadFile(file);
   const opened = openAppWindow(buildWhatsAppUrl(phone, text));
-  return { method: copied ? 'clipboard' : 'download', opened };
+  return { method: 'download', opened };
 }

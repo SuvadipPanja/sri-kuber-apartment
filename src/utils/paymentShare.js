@@ -19,13 +19,13 @@ export function paymentPurposeLabel(payment) {
   return remarks.slice(0, 60);
 }
 
-export function paymentWhatsAppMessage(payment) {
+export function paymentWhatsAppMessage(payment, societyName = 'Sri Kuber Apartment') {
   const name = payment?.ownerName || 'Resident';
   const purpose = paymentPurposeLabel(payment);
   return [
     `Dear ${name},`,
     `Thank you for your ${purpose} payment for Flat ${payment?.flatNo}.`,
-    '— Society Maintenance Team',
+    `— ${societyName}`,
   ].join('\n');
 }
 

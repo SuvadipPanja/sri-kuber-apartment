@@ -35,18 +35,18 @@ assert.equal(paymentPurposeLabel(payment), 'maintenance');
 assert.equal(paymentPurposeLabel({ ...payment, remarks: '' }), 'maintenance');
 assert.equal(paymentPurposeLabel({ ...payment, remarks: 'Parking fee' }), 'Parking fee');
 
-const message = paymentWhatsAppMessage(payment);
+const message = paymentWhatsAppMessage(payment, 'Sri Kuber Apartment');
 assert.equal(message, [
   'Dear Prashanta Das,',
   'Thank you for your maintenance payment for Flat 402.',
-  '— Society Maintenance Team',
+  '— Sri Kuber Apartment',
 ].join('\n'));
 assert.equal(message.includes('₹500'), false);
 assert.equal(message.includes('UPI'), false);
 
-const other = paymentWhatsAppMessage({ ...payment, ownerName: 'Amit Chakraborty', flatNo: '201', remarks: 'Parking fee' });
+const other = paymentWhatsAppMessage({ ...payment, ownerName: 'Amit Chakraborty', flatNo: '201', remarks: 'Parking fee' }, 'Sri Kuber Apartment');
 assert.ok(other.includes('Thank you for your Parking fee payment for Flat 201.'));
-assert.ok(other.includes('Society Maintenance Team'));
+assert.ok(other.endsWith('— Sri Kuber Apartment'));
 
 const waUrl = buildWhatsAppUrl('919876543210', message);
 assert.ok(waUrl.startsWith('https://wa.me/919876543210?text='));
