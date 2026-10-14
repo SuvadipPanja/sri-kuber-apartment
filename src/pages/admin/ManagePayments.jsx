@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { supabase } from '../../services/supabase';
-import { useSupabaseTable } from '../../hooks/useSupabase';
+import { useSupabaseTable, useConfig } from '../../hooks/useSupabase';
 import { usePeriodFilter } from '../../hooks/usePeriodFilter';
 import { useToast } from '../../context/ToastContext';
 import { formatCurrency, formatDate, MONTHS, PAYMENT_MODES, generateId, getCurrentMonth, getCurrentYear } from '../../utils/formatters';
+import { generateReceipt } from '../../utils/receiptUtils';
+import { toWhatsAppNumber, paymentWhatsAppMessage, buildWhatsAppUrl, openAppWindow } from '../../utils/paymentShare';
 import PageShell from '../../components/ui/PageShell';
 import Modal from '../../components/ui/Modal';
 import MonthYearFilter from '../../components/ui/MonthYearFilter';
@@ -17,6 +19,7 @@ const EMPTY_FORM = () => ({
 
 export default function ManagePayments() {
   const { addToast } = useToast();
+  const { config } = useConfig();
   const { data: rawPayments, loading, refetch } = useSupabaseTable('payments', q => q.order('payment_date', { ascending: false }));
   const { data: rawOwners } = useSupabaseTable('owners');
 
@@ -77,6 +80,30 @@ export default function ManagePayments() {
     else { addToast('Payment deleted.', 'success'); refetch(); }
   };
 
+  const handleReceipt = (payment) => {
+    const result = generateReceipt(payment, config);
+    if (!result.success) {
+      addToast(result.message || 'Could not create receipt.', 'error');
+      return;
+    }
+    if (result.mode === 'download') {
+      addToast(result.message || 'Receipt downloaded.', 'success');
+    }
+  };
+
+  const handleWhatsApp = (payment) => {
+    const owner = rawOwners.find((o) => o.flat_no === payment.flatNo);
+    const phone = toWhatsAppNumber(owner?.phone);
+    if (!phone) {
+      addToast(`No valid phone saved for Flat ${payment.flatNo}. Add it in Manage Owners.`, 'error');
+      return;
+    }
+    const societyName = config?.society_name || 'Sri Kuber Apartment';
+    const text = paymentWhatsAppMessage(payment, societyName);
+    const url = buildWhatsAppUrl(phone, text);
+    if (!openAppWindow(url)) addToast('Allow pop-ups to open WhatsApp.', 'error');
+  };
+
   return (
     <PageShell
       icon="money"
@@ -116,7 +143,9 @@ export default function ManagePayments() {
                     <td>{formatDate(p.paymentDate)}</td>
                     <td><span className="badge badge-accent">{p.paymentMode}</span></td>
                     <td>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'nowrap' }}>
+                        <button className="btn-icon" onClick={() => handleReceipt(p)} title="Download receipt" aria-label={`Receipt for Flat ${p.flatNo}`}>🧾</button>
+                        <button className="btn-icon success" onClick={() => handleWhatsApp(p)} title="Send on WhatsApp" aria-label={`WhatsApp Flat ${p.flatNo}`}>💬</button>
                         <button className="btn-icon" onClick={() => openEdit(p)} title="Edit">✏️</button>
                         <button className="btn-icon" onClick={() => handleDelete(p.id)} title="Delete" style={{ color: 'var(--danger)' }}>🗑️</button>
                       </div>

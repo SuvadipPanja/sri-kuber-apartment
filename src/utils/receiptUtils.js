@@ -45,7 +45,7 @@ function getAppOrigin() {
   return '';
 }
 
-function buildReceiptHtml(payment, config) {
+export function buildReceiptHtml(payment, config) {
   const societyName = config?.society_name || 'Sri Kuber Apartment';
   const addressParts = [config?.address, config?.city, config?.state].filter(Boolean);
   const address = addressParts.join(', ');
@@ -304,8 +304,11 @@ export function generateReceipt(payment, config = null) {
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
 
-    const preview = window.open(url, '_blank', 'noopener,noreferrer');
+    // Do not pass noopener here: browsers return null for that window, so a
+    // successful preview was treated as a blocked popup.
+    const preview = window.open(url, '_blank');
     if (preview) {
+      try { preview.opener = null; } catch { /* ignore */ }
       setTimeout(() => URL.revokeObjectURL(url), 120_000);
       return { success: true, mode: 'preview' };
     }
