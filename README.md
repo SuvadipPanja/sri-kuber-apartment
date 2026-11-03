@@ -12,6 +12,10 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)
 ![PWA](https://img.shields.io/badge/PWA-5A0FC8?style=flat-square&logo=pwa&logoColor=white)
 
+<br/><br/>
+
+<img src="docs/screenshot.png" alt="Screenshot of the live site" width="100%" />
+
 </div>
 
 ---
