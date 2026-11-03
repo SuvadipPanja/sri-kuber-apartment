@@ -1,16 +1,51 @@
-# React + Vite
+<div align="center">
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# 🏢 Sri Kuber Apartment — Society Portal
 
-Currently, two official plugins are available:
+**Maintenance and money management for an apartment society.**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+[![Live site](https://img.shields.io/badge/Live-sri--kuber--apartment.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://sri-kuber-apartment.vercel.app)
 
-## React Compiler
+![React](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?style=flat-square&logo=supabase&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)
+![PWA](https://img.shields.io/badge/PWA-5A0FC8?style=flat-square&logo=pwa&logoColor=white)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+</div>
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## About
+
+Residents see what they paid, what is due and where the society's money went. The admin manages collections, expenses, notices and resident records — all from one app that installs on a phone like a native app.
+
+## Features
+
+| For residents | For the admin |
+|---|---|
+| Payment history and pending dues | Record collections and expenses |
+| Society expense view | Notices and announcements |
+| Raise and track complaints | Resident records and profile photos |
+| Printable statements, share to WhatsApp | Financial dashboard with charts |
+
+- **Role-based access** — residents only see their own data plus public society data
+- **Supabase** for auth, PostgreSQL and file storage
+- **PWA** — add to home screen
+- Clean dark UI built with plain CSS variables and SVG icons
+
+## Run locally
+
+```bash
+cp .env.example .env    # add your Supabase URL and anon key
+npm install
+npm run dev
+```
+
+Pushes to `main` deploy automatically on Vercel.
+
+---
+
+<div align="center">
+Built by <a href="https://github.com/SuvadipPanja">Suvadip Panja</a>
+</div>
